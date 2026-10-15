@@ -4,11 +4,13 @@
 //   Tidal.Diag --caps         also fetch DDC/CI capabilities strings (slow)
 //   Tidal.Diag --test-write   briefly change each display's brightness, read it back, then restore it
 //   Tidal.Diag --set N P      set display N's brightness to P percent
+//   Tidal.Diag --watch-builtin S   print the built-in screen's brightness as it changes, for S seconds
 //   Tidal.Diag --verbose      include debug log lines
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Tidal.Core;
+using Tidal.Core.Adaptive;
 using Tidal.Core.Displays;
 
 SetProcessDpiAwarenessContext(-4); // per-monitor aware, so bounds are in physical pixels
@@ -43,6 +45,25 @@ for (int i = 0; i < displays.Count; i++)
 
     if (showCapabilities && display is DdcDisplay { Method: ControlMethod.DdcCi } ddc)
         await PrintCapabilities(ddc);
+}
+
+int watchIndex = Array.IndexOf(args, "--watch-builtin");
+if (watchIndex >= 0)
+{
+    int seconds = watchIndex + 1 < args.Length && int.TryParse(args[watchIndex + 1], out int s) ? s : 30;
+    if (!BuiltInDisplaySource.IsAvailable)
+    {
+        Console.WriteLine("No built-in screen with WMI brightness.");
+        return 1;
+    }
+    Console.WriteLine();
+    Console.WriteLine($"Watching the built-in screen's brightness for {seconds} s...");
+    var watch = Stopwatch.StartNew();
+    using var source = new BuiltInDisplaySource();
+    source.LevelChanged += (_, _) => Console.WriteLine($"  {watch.Elapsed.TotalSeconds,6:0.00} s  {source.Percent}%");
+    source.Start();
+    await Task.Delay(TimeSpan.FromSeconds(seconds));
+    return 0;
 }
 
 int setIndex = Array.IndexOf(args, "--set");
