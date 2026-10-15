@@ -1,4 +1,4 @@
-<ui:FluentWindow x:Class="Tidal.App.MainWindow"
+<ui:FluentWindow x:Class="Tidal.App.DisplaysWindow"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,8 +6,8 @@
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  xmlns:vm="clr-namespace:Tidal.App.ViewModels"
                  mc:Ignorable="d"
-                 d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-                 Title="Tidal"
+                 d:DataContext="{d:DesignInstance Type=vm:DisplayListViewModel}"
+                 Title="Tidal Displays"
                  Width="520" Height="620" MinWidth="420" MinHeight="360"
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
@@ -47,7 +47,7 @@
 
                         <ui:Button Grid.Column="2" Appearance="Transparent" Padding="8"
                                    Icon="{ui:SymbolIcon ArrowClockwise20}"
-                                   Command="{Binding ReadCommand}"
+                                   Command="{Binding RefreshCommand}"
                                    ToolTip="Read current values from the display" />
                     </Grid>
 
@@ -103,7 +103,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Title="Tidal" />
+        <ui:TitleBar Title="Tidal Displays" />
 
         <Grid Grid.Row="1" Margin="20,8,20,12">
             <Grid.ColumnDefinitions>
