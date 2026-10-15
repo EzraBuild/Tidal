@@ -115,6 +115,17 @@ internal static class NativeMethods
     public const int GWL_EXSTYLE = -20;
     public const int WS_POPUP = unchecked((int)0x80000000);
     public const int WS_EX_TOOLWINDOW = 0x00000080;
+    public const int WS_EX_NOACTIVATE = 0x08000000;
+    public const int WM_HOTKEY = 0x0312;
+    public static readonly IntPtr HWND_MESSAGE = new(-3);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
