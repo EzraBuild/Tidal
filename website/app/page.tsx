@@ -14,7 +14,7 @@ import {
   WarningIcon,
 } from "@/components/icons";
 
-const version = "0.1.1";
+const version = "0.1.2";
 const repo = "https://github.com/EzraBuild/Tidal";
 const installer = `${repo}/releases/latest/download/Tidal-win-Setup.exe`;
 const portable = `${repo}/releases/latest/download/Tidal-win-Portable.zip`;
