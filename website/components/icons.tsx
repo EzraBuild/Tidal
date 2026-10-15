@@ -51,9 +51,9 @@ export const PlugIcon = (p: IconProps) => (
   </Icon>
 );
 
-export const TrayIcon = (p: IconProps) => (
+export const MoonIcon = (p: IconProps) => (
   <Icon {...p}>
-    <path d="M3 15h5l1.5 2.5h5L16 15h5M3 15V5h18v10M3 15v4h18v-4" />
+    <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
   </Icon>
 );
 

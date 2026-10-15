@@ -10,7 +10,7 @@ import {
   PlugIcon,
   SunIcon,
   SunsetIcon,
-  TrayIcon,
+  MoonIcon,
   WarningIcon,
 } from "@/components/icons";
 
@@ -45,10 +45,10 @@ const features = [
     text: "Switch a monitor between DisplayPort, HDMI and USB-C, and set its speaker volume, when the monitor supports it.",
   },
   {
-    tag: "Tray",
-    icon: TrayIcon,
-    title: "Lives in the tray",
-    text: "One click away, light and dark mode, and a small level on screen when you use the keys. It tells you plainly when a display can't be controlled.",
+    tag: "Dimming",
+    icon: MoonIcon,
+    title: "Darker than 0%",
+    text: "Turn on Dim below 0 and keep going past a monitor's lowest brightness, in software. Monitors without DDC/CI get a slider that dims them the same way.",
   },
   {
     tag: "Private",
@@ -71,12 +71,7 @@ const requirements = [
   "External monitors need DDC/CI, which most have (usually on in the monitor's menu)",
 ];
 
-const comingNext = [
-  "Software dimming below 0%",
-  "Dimming for monitors without DDC/CI",
-  "Per-app brightness presets",
-  "Start with Windows",
-];
+const comingNext = ["Per-app brightness presets", "Start with Windows"];
 
 const faq = [
   {
@@ -85,8 +80,8 @@ const faq = [
       <>
         Most external monitors from the last decade support DDC/CI, the standard Tidal uses. If one doesn&apos;t respond, turn on DDC/CI in
         the monitor&apos;s on-screen menu, or connect it directly instead of through a dock, KVM switch or adapter. Wireless and
-        DisplayLink displays can&apos;t be controlled this way. Laptop screens use Windows&apos; own brightness control. Tidal shows which
-        method each display uses, and why when one can&apos;t be controlled.
+        DisplayLink displays can&apos;t be controlled this way, so Tidal dims them in software instead. Laptop screens use Windows&apos;
+        own brightness control. Tidal shows which method each display uses, and why when one can&apos;t be controlled.
       </>
     ),
   },
