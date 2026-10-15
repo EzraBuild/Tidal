@@ -10,7 +10,7 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 |---|---------|-------|
 | 1 | Detect monitors; read/write brightness and contrast (DDC/CI, WMI) | Done |
 | 2 | Tray popup with per-monitor sliders and "link all" | Done |
-| 3 | Global hotkeys with per-monitor min/max | Planned |
+| 3 | Global hotkeys with per-monitor min/max | Done |
 | 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Planned |
 | 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Planned |
 | 6 | Software dimming below 0% / for monitors without DDC/CI | Planned |
@@ -22,13 +22,19 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 ```
 src/Tidal.Core         Hardware layer, no UI
   Native/              P/Invoke: user32 (monitor enumeration, CCD) and dxva2 (DDC/CI)
-  Displays/            Display model, detection, DDC/CI + WMI backends, write throttling
+  Displays/            Display model, detection, DDC/CI + WMI backends, write throttling, limits
+  Hotkeys/             Shortcut parsing and formatting
+  Settings/            Settings model and JSON store
 src/Tidal.App          WPF tray app (WPF-UI for Windows 11 styling: Mica/Acrylic, rounded corners)
   Tray/                Notification-area icon, the brightness popup, the logo
-  ViewModels/          Display list shared by the popup and the Displays window ("link all" lives here)
-  Interop/             Win32 for the tray icon and popup placement
+  Osd/                 On-screen brightness indicator for shortcuts
+  Controls/            Shortcut recorder
+  Services/            Global hotkeys, settings persistence
+  ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
+  Interop/             Win32 for the tray icon, popup placement and hotkeys
 tools/Tidal.Diag       Console diagnostics: what each display supports
-tests/Tidal.Core.Tests Unit tests for the throttling queue, capabilities parser and interop structs
+tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits,
+                       shortcuts, settings store
 ```
 
 ### How detection works
@@ -62,12 +68,21 @@ drag it onto the taskbar to keep it visible).
 
 - **Click the icon** to open the brightness popup: one slider per display. The mouse wheel moves a
   slider. Click elsewhere or press Esc to close.
-- **Link all** moves every display to the level of the slider you drag.
-- **Right-click the icon** for the Displays window (contrast, connection details, why a display
-  can't be controlled), detecting displays again, and Quit.
+- **Link all** moves every display to the same relative level as the slider you drag, within each
+  display's own limits (so with no limits set, they all get the same value).
+- **Brightness shortcuts** work in any app: Ctrl+Alt+PageUp / Ctrl+Alt+PageDown by default, 5% per
+  press, hold to repeat. A small indicator shows the new level on each display that changed. They
+  can change every display or only the one under the mouse pointer.
+- **Limits**: each display can have a lowest and highest brightness. Sliders, shortcuts and Link all
+  stay inside them; "brighter" never dims a display that was set above its limit by other means.
+- **Right-click the icon** for Settings (contrast, limits, shortcuts, why a display can't be
+  controlled), detecting displays again, and Quit.
 - Hovering the icon shows each display's brightness.
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
+
+Settings are saved to `%LOCALAPPDATA%\Tidal\settings.json` (readable JSON; an unreadable file is
+kept as `settings.json.bad` and defaults are used).
 
 ## Build and run
 
