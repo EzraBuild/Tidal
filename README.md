@@ -11,7 +11,7 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 | 1 | Detect monitors; read/write brightness and contrast (DDC/CI, WMI) | Done |
 | 2 | Tray popup with per-monitor sliders and "link all" | Done |
 | 3 | Global hotkeys with per-monitor min/max | Done |
-| 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Planned |
+| 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Done |
 | 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Planned |
 | 6 | Software dimming below 0% / for monitors without DDC/CI | Planned |
 | 7 | Per-app presets | Planned |
@@ -23,6 +23,8 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 src/Tidal.Core         Hardware layer, no UI
   Native/              P/Invoke: user32 (monitor enumeration, CCD) and dxva2 (DDC/CI)
   Displays/            Display model, detection, DDC/CI + WMI backends, write throttling, limits
+  Adaptive/            Sun position (NOAA equations), level curves, and the sun / built-in screen /
+                       light sensor sources
   Hotkeys/             Shortcut parsing and formatting
   Settings/            Settings model and JSON store
 src/Tidal.App          WPF tray app (WPF-UI for Windows 11 styling: Mica/Acrylic, rounded corners)
@@ -34,7 +36,7 @@ src/Tidal.App          WPF tray app (WPF-UI for Windows 11 styling: Mica/Acrylic
   Interop/             Win32 for the tray icon, popup placement and hotkeys
 tools/Tidal.Diag       Console diagnostics: what each display supports
 tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits,
-                       shortcuts, settings store
+                       shortcuts, settings store, sun times, adaptive curves
 ```
 
 ### How detection works
@@ -75,8 +77,18 @@ drag it onto the taskbar to keep it visible).
   can change every display or only the one under the mouse pointer.
 - **Limits**: each display can have a lowest and highest brightness. Sliders, shortcuts and Link all
   stay inside them; "brighter" never dims a display that was set above its limit by other means.
-- **Right-click the icon** for Settings (contrast, limits, shortcuts, why a display can't be
-  controlled), detecting displays again, and Quit.
+- **Adaptive brightness** moves displays automatically. Pick one source in Settings:
+  - *Follow the sun*: dim at night, brightest at the day's highest sun, computed locally from your
+    location (type it, or let Windows fill it in).
+  - *Match the built-in display*: external displays follow the laptop screen, however it changes
+    (Fn keys, the Windows slider, Windows' own automatic brightness).
+  - *Follow the light sensor*: on PCs with an ambient light sensor.
+
+  Each display has its own Adaptive switch (on for external displays by default) and follows the
+  level within its limits, so limits double as calibration. Changing a display yourself while
+  adaptive is on keeps your change as an offset; Settings shows it with a Reset button.
+- **Right-click the icon** for Settings (contrast, limits, adaptive brightness, shortcuts, why a
+  display can't be controlled), detecting displays again, and Quit.
 - Hovering the icon shows each display's brightness.
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
@@ -86,7 +98,7 @@ kept as `settings.json.bad` and defaults are used).
 
 ## Build and run
 
-Requires the .NET 8 SDK on Windows 10/11.
+Requires the .NET 8 SDK on Windows 10 (version 2004 or later) or Windows 11.
 
 ```powershell
 dotnet build
@@ -96,4 +108,5 @@ dotnet run --project tools/Tidal.Diag          # list displays and what Tidal ca
 dotnet run --project tools/Tidal.Diag -- --caps         # include DDC/CI capabilities (slow)
 dotnet run --project tools/Tidal.Diag -- --test-write   # change brightness briefly, verify, restore
 dotnet run --project tools/Tidal.Diag -- --set 2 70     # set display 2 to 70%
+dotnet run --project tools/Tidal.Diag -- --watch-builtin 30   # print built-in brightness changes
 ```
