@@ -21,6 +21,9 @@ public sealed partial class DisplayViewModel : ObservableObject
     private bool _suppressEditEvent;
     private bool _applyingAdaptive;
     private long _lastEdit;
+    // A monitor that is switching inputs can report a wrong input for a few seconds.
+    private static readonly TimeSpan InputSwitchHold = TimeSpan.FromSeconds(5);
+    private long _inputSwitchedAt;
     // The adaptive level this display is following, or null when adaptive brightness isn't driving it.
     private double? _adaptiveLevel;
 
@@ -42,6 +45,14 @@ public sealed partial class DisplayViewModel : ObservableObject
     public bool IsInternal => _display.Info.IsInternal;
     public ScreenRect Bounds => _display.Info.Bounds;
     public SymbolRegular Icon => _display.Info.IsInternal ? SymbolRegular.Laptop24 : SymbolRegular.Desktop24;
+
+    /// <summary>How Tidal reaches the hardware, for the badge on the monitor illustration.</summary>
+    public string MethodLabel => _display.Method switch
+    {
+        ControlMethod.DdcCi => "DDC/CI",
+        ControlMethod.Wmi => "Windows brightness",
+        _ => "No hardware control",
+    };
 
     public string Details => _display.Method switch
     {
@@ -65,6 +76,26 @@ public sealed partial class DisplayViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNote))]
     private string? _note;
+
+    /// <summary>Inputs the monitor can show (empty until its capabilities have been read).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasInputs))]
+    private IReadOnlyList<InputSource> _inputs = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CurrentInputName))]
+    private InputSource? _currentInput;
+
+    /// <summary>True when there's more than one input to choose from.</summary>
+    public bool HasInputs => Inputs.Count > 1;
+
+    public string CurrentInputName => CurrentInput?.Name ?? "Input";
+
+    [ObservableProperty]
+    private bool _supportsVolume;
+
+    [ObservableProperty]
+    private double _volume;
 
     public bool HasNote => Note is not null;
 
@@ -123,6 +154,18 @@ public sealed partial class DisplayViewModel : ObservableObject
 
     public bool HasAdaptiveOffset => _adaptiveLevel is not null && Math.Abs(_settings.AdaptiveOffset) >= 0.005;
 
+    /// <summary>True while adaptive brightness is driving this display.</summary>
+    public bool IsFollowingAdaptive => _adaptiveLevel is not null;
+
+    /// <summary>
+    /// Sets brightness to <paramref name="fraction"/> of the way between this display's limits, as
+    /// a user change (so under adaptive brightness it becomes the offset).
+    /// </summary>
+    public void SetLevel(double fraction)
+    {
+        if (SupportsBrightness) SetBrightnessQuietly(Range.FromFraction(fraction));
+    }
+
     partial void OnBrightnessChanged(double value)
     {
         if (_loadingFromDisplay || !SupportsBrightness) return;
@@ -155,6 +198,25 @@ public sealed partial class DisplayViewModel : ObservableObject
         if (_loadingFromDisplay || !SupportsContrast) return;
         _lastEdit = Stopwatch.GetTimestamp();
         _display.SetContrast((int)Math.Round(value));
+    }
+
+    partial void OnVolumeChanged(double value)
+    {
+        if (_loadingFromDisplay || !SupportsVolume) return;
+        _lastEdit = Stopwatch.GetTimestamp();
+        _display.SetVolume((int)Math.Round(value));
+    }
+
+    /// <summary>
+    /// Switches the monitor to another input. Choosing the input it's already on does nothing: some
+    /// monitors blank briefly when asked to re-select their current input.
+    /// </summary>
+    public void SwitchInput(InputSource input)
+    {
+        if (input == CurrentInput || !Inputs.Contains(input)) return;
+        _display.SetInput(input);
+        _inputSwitchedAt = Stopwatch.GetTimestamp();
+        CurrentInput = input;
     }
 
     /// <summary>One hotkey press: brighter or dimmer by <paramref name="delta"/>, within the limits.</summary>
@@ -214,6 +276,7 @@ public sealed partial class DisplayViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(AdaptiveOffsetText));
         OnPropertyChanged(nameof(HasAdaptiveOffset));
+        OnPropertyChanged(nameof(IsFollowingAdaptive));
     }
 
     public bool Contains(int x, int y) => x >= Bounds.Left && x < Bounds.Right && y >= Bounds.Top && y < Bounds.Bottom;
@@ -283,9 +346,15 @@ public sealed partial class DisplayViewModel : ObservableObject
                 // Shown as read, even outside the limits: Tidal only enforces them when it changes the value.
                 Brightness = _display.Brightness ?? 0;
                 Contrast = _display.Contrast ?? 0;
+                Volume = _display.Volume ?? 0;
             }
+            SupportsVolume = _display.SupportsVolume;
+            Inputs = _display.InputSources;
+            bool recentlySwitched = _inputSwitchedAt != 0 && Stopwatch.GetElapsedTime(_inputSwitchedAt) < InputSwitchHold;
+            if (!recentlySwitched) CurrentInput = _display.CurrentInput;
             Note = _display.Note;
             OnPropertyChanged(nameof(Details));
+            OnPropertyChanged(nameof(MethodLabel));
         }
         finally
         {

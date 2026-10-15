@@ -73,14 +73,23 @@ public sealed partial class ShortcutsViewModel : ObservableObject
     public bool OnlyDisplayUnderPointer
     {
         get => _settings.Target == HotkeyTarget.DisplayUnderPointer;
-        set
-        {
-            var target = value ? HotkeyTarget.DisplayUnderPointer : HotkeyTarget.AllDisplays;
-            if (target == _settings.Target) return;
-            _settings.Target = target;
-            _settingsChanged();
-            OnPropertyChanged();
-        }
+        set => SetTarget(value ? HotkeyTarget.DisplayUnderPointer : HotkeyTarget.AllDisplays);
+    }
+
+    /// <summary>The opposite choice, for a two-option segmented control.</summary>
+    public bool AppliesToAllDisplays
+    {
+        get => _settings.Target == HotkeyTarget.AllDisplays;
+        set { if (value) SetTarget(HotkeyTarget.AllDisplays); }
+    }
+
+    private void SetTarget(HotkeyTarget target)
+    {
+        if (target == _settings.Target) return;
+        _settings.Target = target;
+        _settingsChanged();
+        OnPropertyChanged(nameof(OnlyDisplayUnderPointer));
+        OnPropertyChanged(nameof(AppliesToAllDisplays));
     }
 
     // One flag per shortcut box: sharing one would make both boxes show "Press a shortcut…".

@@ -132,6 +132,17 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
         return targets;
     }
 
+    /// <summary>
+    /// Sets every display to a preset level (e.g. "0.5"): that far between each display's own
+    /// limits, so 100% means each display's maximum.
+    /// </summary>
+    [RelayCommand]
+    private void ApplyPreset(string fraction)
+    {
+        double level = double.Parse(fraction, System.Globalization.CultureInfo.InvariantCulture);
+        foreach (var display in Displays) display.SetLevel(level);
+    }
+
     /// <summary>The display containing the given screen point (physical pixels), if any.</summary>
     public DisplayViewModel? FindDisplayAt(int x, int y) => Displays.FirstOrDefault(d => d.Contains(x, y));
 

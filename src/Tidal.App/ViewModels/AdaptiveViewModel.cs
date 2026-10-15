@@ -58,12 +58,22 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
             _displays.ResetAdaptiveOffsets();
             StartSource();
             OnPropertyChanged(nameof(Mode));
+            OnPropertyChanged(nameof(ModeLabel));
             OnPropertyChanged(nameof(IsOff));
             OnPropertyChanged(nameof(IsSun));
             OnPropertyChanged(nameof(IsBuiltIn));
             OnPropertyChanged(nameof(IsSensor));
         }
     }
+
+    /// <summary>Short name for the mode picker pill.</summary>
+    public string ModeLabel => Mode switch
+    {
+        AdaptiveMode.Sun => "Sun",
+        AdaptiveMode.BuiltInDisplay => "Match laptop",
+        AdaptiveMode.LightSensor => "Light sensor",
+        _ => "Manual",
+    };
 
     // One property per radio button.
     public bool IsOff { get => Mode == AdaptiveMode.Off; set { if (value) Mode = AdaptiveMode.Off; } }
