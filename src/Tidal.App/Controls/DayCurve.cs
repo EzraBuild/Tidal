@@ -30,7 +30,13 @@ public sealed class DayCurve : FrameworkElement
     public static readonly DependencyProperty GridBrushProperty = DependencyProperty.Register(
         nameof(GridBrush), typeof(Brush), typeof(DayCurve), new FrameworkPropertyMetadata(Brushes.LightGray, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    public static readonly DependencyProperty MarkerFillBrushProperty = DependencyProperty.Register(
+        nameof(MarkerFillBrush), typeof(Brush), typeof(DayCurve), new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
     private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromMinutes(1) };
+
+    /// <summary>Inside of the "now" marker (the background colour, so the ring reads on the curve).</summary>
+    public Brush MarkerFillBrush { get => (Brush)GetValue(MarkerFillBrushProperty); set => SetValue(MarkerFillBrushProperty, value); }
 
     public DayCurve()
     {
@@ -99,13 +105,16 @@ public sealed class DayCurve : FrameworkElement
         // Now.
         var nowPoint = ToPoint(now, LevelAt(now));
         dc.DrawLine(new Pen(CurveBrush, 1), new Point(nowPoint.X, nowPoint.Y), new Point(nowPoint.X, plotHeight));
-        dc.DrawEllipse(Brushes.White, new Pen(CurveBrush, 3), nowPoint, 6, 6);
+        dc.DrawEllipse(MarkerFillBrush, new Pen(CurveBrush, 2), nowPoint, 5, 5);
     }
+
+    // Axis labels in the app's mono font when available.
+    private FontFamily TextFont => TryFindResource("TidalMonoFont") as FontFamily ?? new FontFamily("Consolas");
 
     private void DrawText(DrawingContext dc, string text, Point at, Brush brush, bool center)
     {
         var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-            new Typeface("Segoe UI"), 11, brush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+            new Typeface(TextFont, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal), 10.5, brush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
         dc.DrawText(formatted, center ? new Point(at.X - formatted.Width / 2, at.Y) : at);
     }
 }

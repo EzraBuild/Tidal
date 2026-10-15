@@ -1,0 +1,13 @@
+<UserControl x:Class="Tidal.App.Controls.LogoMark"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tray="clr-namespace:Tidal.App.Tray"
+             Width="20" Height="20" IsHitTestVisible="False">
+    <!-- Tidal's mark in the current text colour, so it follows light and dark mode. -->
+    <Viewbox>
+        <Canvas Width="24" Height="24">
+            <Path Data="{x:Static tray:Logo.RingGeometry}" StrokeThickness="1.5" Stroke="{DynamicResource TidalTextBrush}" />
+            <Path Data="{x:Static tray:Logo.WaterGeometry}" Fill="{DynamicResource TidalTextBrush}" />
+        </Canvas>
+    </Viewbox>
+</UserControl>

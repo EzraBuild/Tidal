@@ -138,16 +138,17 @@ public sealed class ShortcutBox : Button
 
     private static Border CreateKeycap(string key)
     {
+        var text = new TextBlock { Text = key, FontSize = 12, FontWeight = FontWeights.Medium };
+        text.SetResourceReference(TextBlock.FontFamilyProperty, "TidalMonoFont");
         var keycap = new Border
         {
-            CornerRadius = new CornerRadius(6),
-            BorderThickness = new Thickness(1, 1, 1, 2.5),
+            BorderThickness = new Thickness(1, 1, 1, 2),
             Padding = new Thickness(8, 2, 8, 3),
             Margin = new Thickness(0, 0, 5, 0),
-            Child = new TextBlock { Text = key, FontSize = 12, FontWeight = FontWeights.SemiBold },
+            Child = text,
         };
-        keycap.SetResourceReference(Border.BackgroundProperty, "TidalChipBrush");
-        keycap.SetResourceReference(Border.BorderBrushProperty, "TidalChipHoverBrush");
+        keycap.SetResourceReference(Border.BackgroundProperty, "TidalSurfaceBrush");
+        keycap.SetResourceReference(Border.BorderBrushProperty, "TidalBorderStrongBrush");
         return keycap;
     }
 }

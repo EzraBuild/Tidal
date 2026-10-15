@@ -11,19 +11,14 @@
     <Button x:Name="PickerButton" Style="{StaticResource TidalChipButton}" Padding="10,6,8,6"
             Click="OnClick" AutomationProperties.Name="Adaptive mode" ToolTip="What brightness follows">
         <StackPanel Orientation="Horizontal">
-            <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center">
+            <Ellipse Width="7" Height="7" Margin="0,0,8,0" VerticalAlignment="Center">
                 <Ellipse.Style>
                     <Style TargetType="Ellipse">
-                        <Setter Property="Fill" Value="{DynamicResource TextFillColorTertiaryBrush}" />
+                        <!-- Solid while adaptive brightness is on, faint when manual. -->
+                        <Setter Property="Fill" Value="{DynamicResource TidalTextBrush}" />
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Mode}" Value="Sun">
-                                <Setter Property="Fill" Value="{DynamicResource TidalSunBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode}" Value="BuiltInDisplay">
-                                <Setter Property="Fill" Value="{DynamicResource TidalOceanBrush}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Mode}" Value="LightSensor">
-                                <Setter Property="Fill" Value="#4CC38A" />
+                            <DataTrigger Binding="{Binding Mode}" Value="Off">
+                                <Setter Property="Fill" Value="{DynamicResource TidalFaintBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

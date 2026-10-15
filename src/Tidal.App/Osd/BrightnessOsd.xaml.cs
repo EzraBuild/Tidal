@@ -25,7 +25,7 @@ public partial class BrightnessOsd : FluentWindow
     public BrightnessOsd()
     {
         InitializeComponent();
-        SystemThemeWatcher.Watch(this, WindowBackdropType.Acrylic);
+        SystemThemeWatcher.Watch(this, WindowBackdropType.None, updateAccents: false); // TidalTheme owns the accent
 
         _hideTimer = new DispatcherTimer { Interval = VisibleFor };
         _hideTimer.Tick += (_, _) =>
@@ -41,7 +41,9 @@ public partial class BrightnessOsd : FluentWindow
     public void ShowLevel(ScreenRect displayBounds, int percent)
     {
         _displayBounds = displayBounds;
-        LevelBar.Value = percent;
+        percent = Math.Clamp(percent, 0, 100);
+        FillColumn.Width = new GridLength(percent, GridUnitType.Star);
+        RestColumn.Width = new GridLength(100 - percent, GridUnitType.Star);
         LevelText.Text = percent.ToString();
 
         new WindowInteropHelper(this).EnsureHandle();

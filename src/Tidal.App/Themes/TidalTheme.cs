@@ -5,8 +5,9 @@ using Wpf.Ui.Appearance;
 namespace Tidal.App.Themes;
 
 /// <summary>
-/// Tidal's own colours, layered on top of WPF-UI's Fluent theme: warm sun amber for brightness,
-/// ocean blue for the brand and selections. Kept in step with the light/dark app theme.
+/// Tidal's monochrome palette: black and white with greys, thin borders and square corners, in
+/// light and dark. Also pins WPF-UI's accent to the foreground colour so its toggles and focus
+/// rings stay monochrome instead of taking the Windows accent.
 /// </summary>
 internal static class TidalTheme
 {
@@ -21,40 +22,45 @@ internal static class TidalTheme
         bool dark = theme != ApplicationTheme.Light;
         var resources = Application.Current.Resources;
 
-        // Brightness: the sun.
-        Set(resources, "TidalSunBrush", dark ? "#F6B847" : "#E89B12");
-        Set(resources, "TidalSunSoftBrush", dark ? "#24F6B847" : "#1FE89B12");
-        Set(resources, "TidalOnSunBrush", "#4A3200");
-        // Contrast.
-        Set(resources, "TidalContrastBrush", dark ? "#9DAAFF" : "#5B6CE0");
-        Set(resources, "TidalContrastSoftBrush", dark ? "#249DAAFF" : "#1A5B6CE0");
-        // Volume.
-        Set(resources, "TidalVolumeBrush", dark ? "#43CDB8" : "#11998A");
-        Set(resources, "TidalVolumeSoftBrush", dark ? "#2443CDB8" : "#1A11998A");
-        // Brand: the sea.
-        Set(resources, "TidalOceanBrush", dark ? "#3AA6F0" : "#1A84D2");
-        Set(resources, "TidalOceanSoftBrush", dark ? "#263AA6F0" : "#1A1A84D2");
-        Set(resources, "TidalOnOceanBrush", "#FFFFFF");
+        Set(resources, "TidalBackgroundBrush", dark ? "#000000" : "#FFFFFF");
+        Set(resources, "TidalSurfaceBrush", dark ? "#0A0A0A" : "#FAFAFA");
+        Set(resources, "TidalHoverBrush", dark ? "#171717" : "#F2F2F2");
+        Set(resources, "TidalTrackBrush", dark ? "#121212" : "#F2F2F2");
+        Set(resources, "TidalBorderBrush", dark ? "#262626" : "#E5E5E5");
+        Set(resources, "TidalBorderStrongBrush", dark ? "#3F3F3F" : "#CFCFCF");
+        Set(resources, "TidalTextBrush", dark ? "#EDEDED" : "#0A0A0A");
+        Set(resources, "TidalMutedBrush", dark ? "#A1A1A1" : "#6B6B6B");
+        Set(resources, "TidalFaintBrush", dark ? "#5C5C5C" : "#A3A3A3");
+        // Solid, inverted surfaces: primary buttons, selected tabs, slider fills.
+        Set(resources, "TidalInvertBrush", dark ? "#FAFAFA" : "#0A0A0A");
+        Set(resources, "TidalOnInvertBrush", dark ? "#0A0A0A" : "#FAFAFA");
+        // Secondary slider fills (contrast, volume), so they read apart from brightness.
+        Set(resources, "TidalSecondaryFillBrush", dark ? "#8A8A8A" : "#8F8F8F");
+        Set(resources, "TidalWarningBrush", dark ? "#F5A524" : "#B45309");
+        resources["TidalGridBrush"] = CreateGridBrush(dark ? Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x0C, 0x00, 0x00, 0x00));
 
-        // Surfaces.
-        Set(resources, "TidalTrackBrush", dark ? "#1FFFFFFF" : "#14000000");
-        Set(resources, "TidalChipBrush", dark ? "#14FFFFFF" : "#0C000000");
-        Set(resources, "TidalChipHoverBrush", dark ? "#26FFFFFF" : "#18000000");
-        Set(resources, "TidalPanelBrush", dark ? "#0FFFFFFF" : "#08000000");
-        Set(resources, "TidalDividerBrush", dark ? "#1AFFFFFF" : "#14000000");
-        Set(resources, "TidalKnobBrush", "#FFFFFF");
-        Set(resources, "TidalKnobTextBrush", "#3D2C00");
+        var accent = (Color)ColorConverter.ConvertFromString(dark ? "#FAFAFA" : "#0A0A0A");
+        ApplicationAccentColorManager.Apply(accent, accent, accent, accent);
+    }
 
-        // The monitor illustration: screens are dark in either theme.
-        Set(resources, "TidalScreenBrush", dark ? "#16202E" : "#1E2938");
-        Set(resources, "TidalBezelBrush", dark ? "#2E3B4F" : "#3A4759");
-        Set(resources, "TidalStandBrush", dark ? "#3A4659" : "#C3CDD9");
-        Set(resources, "TidalScreenTextBrush", "#F4F7FB");
-        Set(resources, "TidalScreenMutedBrush", "#9AA9BC");
-
-        // Decorative waves along the bottom of the Settings window.
-        Set(resources, "TidalWaveBackBrush", dark ? "#143AA6F0" : "#141A84D2");
-        Set(resources, "TidalWaveFrontBrush", dark ? "#223AA6F0" : "#221A84D2");
+    /// <summary>A faint square grid, 40 px per cell, for window backgrounds.</summary>
+    private static DrawingBrush CreateGridBrush(Color line)
+    {
+        var pen = new Pen(new SolidColorBrush(line), 1);
+        var geometry = new GeometryGroup();
+        geometry.Children.Add(new LineGeometry(new Point(0, 0), new Point(40, 0)));
+        geometry.Children.Add(new LineGeometry(new Point(0, 0), new Point(0, 40)));
+        var brush = new DrawingBrush(new GeometryDrawing(null, pen, geometry))
+        {
+            TileMode = TileMode.Tile,
+            Viewport = new Rect(0, 0, 40, 40),
+            ViewportUnits = BrushMappingMode.Absolute,
+            Viewbox = new Rect(0, 0, 40, 40),
+            ViewboxUnits = BrushMappingMode.Absolute,
+            Stretch = Stretch.None,
+        };
+        brush.Freeze();
+        return brush;
     }
 
     private static void Set(ResourceDictionary resources, string key, string color)

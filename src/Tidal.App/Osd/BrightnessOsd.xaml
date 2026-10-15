@@ -14,20 +14,29 @@
                  Topmost="True"
                  WindowStartupLocation="Manual"
                  ExtendsContentIntoTitleBar="True"
-                 WindowBackdropType="Acrylic"
-                 WindowCornerPreference="Round">
-    <Grid Margin="18,14">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="34" />
-        </Grid.ColumnDefinitions>
-        <ui:SymbolIcon Symbol="BrightnessHigh24" FontSize="20" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-        <ProgressBar x:Name="LevelBar" Grid.Column="1" Minimum="0" Maximum="100" Margin="12,0"
-                     VerticalAlignment="Center" />
-        <TextBlock x:Name="LevelText" Grid.Column="2" FontSize="14"
-                   HorizontalAlignment="Right" VerticalAlignment="Center"
-                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-    </Grid>
+                 WindowBackdropType="None"
+                 WindowCornerPreference="RoundSmall"
+                 FontFamily="{StaticResource TidalFont}"
+                 Background="{DynamicResource TidalBackgroundBrush}"
+                 Foreground="{DynamicResource TidalTextBrush}">
+    <Border BorderThickness="1" BorderBrush="{DynamicResource TidalBorderStrongBrush}" Background="{DynamicResource TidalBackgroundBrush}">
+        <Grid Margin="16,13">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="36" />
+            </Grid.ColumnDefinitions>
+            <ui:SymbolIcon Symbol="BrightnessHigh24" FontSize="18" VerticalAlignment="Center" />
+            <!-- Level bar: the fill and the rest share the width in proportion to the level. -->
+            <Grid Grid.Column="1" Height="4" Margin="12,0" VerticalAlignment="Center" Background="{DynamicResource TidalTrackBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="FillColumn" Width="0*" />
+                    <ColumnDefinition x:Name="RestColumn" Width="100*" />
+                </Grid.ColumnDefinitions>
+                <Border Background="{DynamicResource TidalInvertBrush}" />
+            </Grid>
+            <TextBlock x:Name="LevelText" Grid.Column="2" FontFamily="{StaticResource TidalMonoFont}" FontSize="13" FontWeight="SemiBold"
+                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </Grid>
+    </Border>
 </ui:FluentWindow>

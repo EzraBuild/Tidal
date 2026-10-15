@@ -12,14 +12,18 @@ namespace Tidal.App.Tray;
 /// </summary>
 internal static class Logo
 {
-    public static readonly Color BrandColor = Color.FromRgb(0x2B, 0x9A, 0xE8);
-
     // Designed on a 24×24 grid.
     private static readonly Geometry Ring = Freeze(new EllipseGeometry(new Point(12, 12), 9.25, 9.25));
     private static readonly Geometry Water = Freeze(new CombinedGeometry(
         GeometryCombineMode.Intersect,
         new EllipseGeometry(new Point(12, 12), 6.75, 6.75),
         Geometry.Parse("M 4,12.5 Q 8,8.5 12,12.5 T 20,12.5 V 21 H 4 Z")));
+
+    /// <summary>The outer ring (stroked, 1.5 wide on the 24×24 grid), for drawing the mark in XAML.</summary>
+    public static Geometry RingGeometry => Ring;
+
+    /// <summary>The tide inside the ring (filled).</summary>
+    public static Geometry WaterGeometry => Water;
 
     public static BitmapSource Render(int size, Color color)
     {

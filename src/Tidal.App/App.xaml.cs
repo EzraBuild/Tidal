@@ -46,7 +46,7 @@ public partial class App : Application
             return;
         }
 
-        ApplicationThemeManager.ApplySystemTheme();
+        ApplicationThemeManager.ApplySystemTheme(updateAccent: false); // TidalTheme sets a monochrome accent
         TidalTheme.Initialize();
 
         SettingsStore.MoveLegacyFile(SettingsStore.LegacyPath, SettingsStore.DefaultPath);

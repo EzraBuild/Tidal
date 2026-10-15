@@ -10,7 +10,7 @@
                  mc:Ignorable="d"
                  d:DataContext="{d:DesignInstance Type=vm:AppViewModel}"
                  Title="Tidal"
-                 Width="380"
+                 Width="360"
                  MinWidth="0"
                  MinHeight="0"
                  SizeToContent="Height"
@@ -19,148 +19,152 @@
                  Topmost="True"
                  WindowStartupLocation="Manual"
                  ExtendsContentIntoTitleBar="True"
-                 WindowBackdropType="Acrylic"
-                 WindowCornerPreference="Round">
+                 WindowBackdropType="None"
+                 WindowCornerPreference="RoundSmall"
+                 FontFamily="{StaticResource TidalFont}"
+                 Background="{DynamicResource TidalBackgroundBrush}"
+                 Foreground="{DynamicResource TidalTextBrush}">
 
-    <Grid x:Name="Root">
-        <Grid.RenderTransform>
-            <TranslateTransform x:Name="SlideTransform" />
-        </Grid.RenderTransform>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Border BorderThickness="1" BorderBrush="{DynamicResource TidalBorderBrush}" Background="{DynamicResource TidalBackgroundBrush}">
+        <Grid x:Name="Root">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="SlideTransform" />
+            </Grid.RenderTransform>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <!-- Header: what brightness follows, and the wordmark. -->
-        <Grid Margin="16,14,16,0">
-            <controls:ModePicker DataContext="{Binding Adaptive}" HorizontalAlignment="Left" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <Image x:Name="LogoImage" Width="18" Height="18" Margin="0,0,6,0" />
-                <TextBlock Text="Tidal" FontFamily="{StaticResource TidalDisplayFont}" FontSize="14" FontWeight="SemiBold"
-                           VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            </StackPanel>
-        </Grid>
+            <!-- Header: wordmark and what brightness follows. -->
+            <Grid Margin="16,12,12,12">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <controls:LogoMark Width="18" Height="18" />
+                    <TextBlock Text="TIDAL." Margin="8,0,0,0" VerticalAlignment="Center"
+                               FontFamily="{StaticResource TidalMonoFont}" FontSize="13" FontWeight="SemiBold" />
+                </StackPanel>
+                <controls:ModePicker DataContext="{Binding Adaptive}" HorizontalAlignment="Right" />
+            </Grid>
+            <Rectangle Grid.Row="0" Height="1" VerticalAlignment="Bottom" Style="{StaticResource TidalDashedLine}" />
 
-        <!-- Adaptive status, only when adaptive brightness is on. -->
-        <TextBlock Grid.Row="1" Margin="18,10,18,0" Text="{Binding Adaptive.Status}" TextAlignment="Center">
-            <TextBlock.Style>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TidalCaption}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Adaptive.IsOff}" Value="True">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Style>
-        </TextBlock>
-
-        <!-- One block per display. -->
-        <Grid Grid.Row="2" Margin="20,4,20,0">
-            <TextBlock Text="{Binding Displays.EmptyMessage}" Margin="0,16" HorizontalAlignment="Center">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock" BasedOn="{StaticResource TidalCaption}">
+            <!-- Adaptive status, only when adaptive brightness is on. -->
+            <Border Grid.Row="1" Padding="16,8" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource TidalBorderBrush}"
+                    Background="{DynamicResource TidalSurfaceBrush}">
+                <Border.Style>
+                    <Style TargetType="Border">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Displays.EmptyMessage}" Value="{x:Null}">
+                            <DataTrigger Binding="{Binding Adaptive.IsOff}" Value="True">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </TextBlock.Style>
-            </TextBlock>
-            <ItemsControl ItemsSource="{Binding Displays.Displays}" Focusable="False">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:DisplayViewModel}">
-                        <StackPanel Margin="0,14,0,2">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding Name}" FontFamily="{StaticResource TidalDisplayFont}" FontSize="16" FontWeight="Bold"
-                                           TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                <Border Margin="8,0,0,0" Padding="6,1,7,1" CornerRadius="6" VerticalAlignment="Center"
-                                        Background="{DynamicResource TidalSunSoftBrush}"
-                                        ToolTip="Adaptive brightness is adjusting this display"
-                                        Visibility="{Binding IsFollowingAdaptive, Converter={StaticResource BoolToVisibility}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <ui:SymbolIcon Symbol="WeatherSunny20" FontSize="11" Foreground="{DynamicResource TidalSunBrush}" />
-                                        <TextBlock Text="Auto" FontSize="10" FontWeight="Bold" Margin="3,0,0,0"
-                                                   Foreground="{DynamicResource TidalSunBrush}" />
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+                </Border.Style>
+                <TextBlock Text="{Binding Adaptive.Status}" FontFamily="{StaticResource TidalMonoFont}" FontSize="11"
+                           TextWrapping="Wrap" Foreground="{DynamicResource TidalMutedBrush}" />
+            </Border>
 
-                            <Slider Margin="0,10,0,0" Style="{StaticResource TidalSlider}"
-                                    behaviors:SliderWheel.Step="2"
-                                    ToolTip="{Binding LimitsDescription}"
-                                    AutomationProperties.Name="{Binding Name, StringFormat={}{0} brightness}"
-                                    Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}"
-                                    Value="{Binding Brightness}" />
+            <!-- One block per display. -->
+            <Grid Grid.Row="2">
+                <TextBlock Text="{Binding Displays.EmptyMessage}" Margin="16,20">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TidalCaption}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Displays.EmptyMessage}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <ItemsControl ItemsSource="{Binding Displays.Displays}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:DisplayViewModel}">
+                            <Grid>
+                                <StackPanel Margin="16,14,16,14">
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" Margin="0,0,64,0" />
+                                        <Border Style="{StaticResource TidalTag}" HorizontalAlignment="Right"
+                                                ToolTip="Adaptive brightness is adjusting this display"
+                                                Visibility="{Binding IsFollowingAdaptive, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Text="AUTO" />
+                                        </Border>
+                                    </Grid>
 
-                            <Slider Margin="0,8,0,0" Style="{StaticResource TidalVolumeSlider}"
-                                    behaviors:SliderWheel.Step="2"
-                                    AutomationProperties.Name="{Binding Name, StringFormat={}{0} volume}"
-                                    Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}"
-                                    Value="{Binding Volume}" />
+                                    <Slider Margin="0,10,0,0" Style="{StaticResource TidalSlider}"
+                                            behaviors:SliderWheel.Step="2"
+                                            ToolTip="{Binding LimitsDescription}"
+                                            AutomationProperties.Name="{Binding Name, StringFormat={}{0} brightness}"
+                                            Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}"
+                                            Value="{Binding Brightness}" />
 
-                            <controls:InputPicker Margin="0,10,0,0" HorizontalAlignment="Center"
-                                                  Visibility="{Binding HasInputs, Converter={StaticResource BoolToVisibility}}" />
+                                    <Slider Margin="0,6,0,0" Style="{StaticResource TidalVolumeSlider}"
+                                            behaviors:SliderWheel.Step="2"
+                                            AutomationProperties.Name="{Binding Name, StringFormat={}{0} volume}"
+                                            Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}"
+                                            Value="{Binding Volume}" />
 
-                            <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Text="No hardware control"
-                                       ToolTip="{Binding Note}" Style="{StaticResource TidalCaption}"
-                                       Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </Grid>
+                                    <controls:InputPicker Margin="0,8,0,0" HorizontalAlignment="Left"
+                                                          Visibility="{Binding HasInputs, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- Presets: a fraction of each display's own range. -->
-        <Border Grid.Row="3" Margin="16,18,16,0" Padding="12,8" Style="{StaticResource TidalPanel}">
-            <Grid>
+                                    <TextBlock Margin="0,6,0,0" Text="No hardware control" ToolTip="{Binding Note}"
+                                               Style="{StaticResource TidalCaption}"
+                                               Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" />
+                                </StackPanel>
+                                <Rectangle Height="1" VerticalAlignment="Bottom" Style="{StaticResource TidalDashedLine}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+            <!-- Presets: a fraction of each display's own range. -->
+            <Grid Grid.Row="3" Margin="16,12,16,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="Presets" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                <UniformGrid Grid.Column="1" Columns="5" Margin="10,0,0,0">
-                    <Button Style="{StaticResource TidalChipButton}" Margin="2,0" Padding="0,5" Content="0%"
+                <TextBlock Text="PRESETS" Style="{StaticResource TidalEyebrow}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <UniformGrid Grid.Column="1" Columns="5">
+                    <Button Style="{StaticResource TidalChipButton}" Padding="0,5" Content="0%"
                             Command="{Binding Displays.ApplyPresetCommand}" CommandParameter="0" />
-                    <Button Style="{StaticResource TidalChipButton}" Margin="2,0" Padding="0,5" Content="25%"
+                    <Button Style="{StaticResource TidalChipButton}" Padding="0,5" Margin="-1,0,0,0" Content="25%"
                             Command="{Binding Displays.ApplyPresetCommand}" CommandParameter="0.25" />
-                    <Button Style="{StaticResource TidalChipButton}" Margin="2,0" Padding="0,5" Content="50%"
+                    <Button Style="{StaticResource TidalChipButton}" Padding="0,5" Margin="-1,0,0,0" Content="50%"
                             Command="{Binding Displays.ApplyPresetCommand}" CommandParameter="0.5" />
-                    <Button Style="{StaticResource TidalChipButton}" Margin="2,0" Padding="0,5" Content="75%"
+                    <Button Style="{StaticResource TidalChipButton}" Padding="0,5" Margin="-1,0,0,0" Content="75%"
                             Command="{Binding Displays.ApplyPresetCommand}" CommandParameter="0.75" />
-                    <Button Style="{StaticResource TidalChipButton}" Margin="2,0" Padding="0,5" Content="100%"
+                    <Button Style="{StaticResource TidalChipButton}" Padding="0,5" Margin="-1,0,0,0" Content="100%"
                             Command="{Binding Displays.ApplyPresetCommand}" CommandParameter="1" />
                 </UniformGrid>
             </Grid>
-        </Border>
 
-        <!-- Footer -->
-        <Grid Grid.Row="4" Margin="16,10,16,14">
-            <ToggleButton Style="{StaticResource TidalChipToggle}" HorizontalAlignment="Left"
-                          IsChecked="{Binding Displays.LinkAll}"
-                          AutomationProperties.Name="Link all"
-                          ToolTip="Move every display's brightness together">
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Link16" FontSize="14" />
-                    <TextBlock Text="Link all" Margin="6,0,0,0" />
-                </StackPanel>
-            </ToggleButton>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Style="{StaticResource TidalChipButton}" Click="OnSettingsClick" AutomationProperties.Name="Settings">
+            <!-- Footer -->
+            <Grid Grid.Row="4" Margin="16,12,16,14">
+                <ToggleButton Style="{StaticResource TidalChipToggle}" HorizontalAlignment="Left"
+                              IsChecked="{Binding Displays.LinkAll}"
+                              AutomationProperties.Name="Link all"
+                              ToolTip="Move every display's brightness together">
                     <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Settings16" FontSize="14" />
-                        <TextBlock Text="Settings" Margin="6,0,0,0" />
+                        <ui:SymbolIcon Symbol="Link16" FontSize="13" />
+                        <TextBlock Text="Link all" Margin="6,0,0,0" />
                     </StackPanel>
-                </Button>
-                <Button Style="{StaticResource TidalChipButton}" Margin="6,0,0,0" Click="OnQuitClick"
-                        AutomationProperties.Name="Quit Tidal" ToolTip="Quit Tidal">
-                    <ui:SymbolIcon Symbol="Power20" FontSize="14" />
-                </Button>
-            </StackPanel>
+                </ToggleButton>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource TidalChipButton}" Click="OnSettingsClick" AutomationProperties.Name="Settings">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Settings16" FontSize="13" />
+                            <TextBlock Text="Settings" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource TidalChipButton}" Margin="-1,0,0,0" Click="OnQuitClick"
+                            AutomationProperties.Name="Quit Tidal" ToolTip="Quit Tidal">
+                        <ui:SymbolIcon Symbol="Power20" FontSize="13" />
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
-    </Grid>
+    </Border>
 </ui:FluentWindow>

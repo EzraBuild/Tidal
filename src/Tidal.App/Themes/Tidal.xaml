@@ -3,50 +3,61 @@
                     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                     xmlns:controls="clr-namespace:Tidal.App.Controls">
 
-    <!-- Tidal's controls. Colours (Tidal*Brush) are set at runtime by TidalTheme for light/dark. -->
+    <!-- Tidal's controls: monochrome, square, thin borders. Colours (Tidal*Brush) come from
+         TidalTheme, which sets them for light or dark. Fonts are embedded in the app. -->
 
-    <FontFamily x:Key="TidalDisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="TidalFont">pack://application:,,,/Assets/Fonts/#Geist</FontFamily>
+    <FontFamily x:Key="TidalMonoFont">pack://application:,,,/Assets/Fonts/#Geist Mono</FontFamily>
+
+    <!-- WPF-UI's own controls: same font, nearly square. -->
+    <FontFamily x:Key="ContentControlThemeFontFamily">pack://application:,,,/Assets/Fonts/#Geist</FontFamily>
+    <CornerRadius x:Key="ControlCornerRadius">2</CornerRadius>
+
     <controls:SliderFillConverter x:Key="SliderFill" />
 
     <!-- ===== Text ===== -->
 
     <Style x:Key="TidalEyebrow" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource TidalMonoFont}" />
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorTertiaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalMutedBrush}" />
     </Style>
 
     <Style x:Key="TidalTitle" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource TidalDisplayFont}" />
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontFamily" Value="{StaticResource TidalFont}" />
+        <Setter Property="FontSize" Value="26" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="TextAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalTextBrush}" />
     </Style>
 
     <Style x:Key="TidalCaption" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontFamily" Value="{StaticResource TidalFont}" />
+        <Setter Property="FontSize" Value="12.5" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalMutedBrush}" />
     </Style>
 
     <Style x:Key="TidalDialLabel" TargetType="TextBlock" BasedOn="{StaticResource TidalEyebrow}">
         <Setter Property="FontSize" Value="10" />
-        <Setter Property="Margin" Value="0,0,0,14" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalFaintBrush}" />
+        <Setter Property="Margin" Value="0,2,0,14" />
     </Style>
 
     <!-- ===== Big numbers ===== -->
 
     <Style TargetType="controls:NumberDial">
-        <Setter Property="FontFamily" Value="{StaticResource TidalDisplayFont}" />
-        <Setter Property="FontSize" Value="44" />
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource TidalSunBrush}" />
-        <Setter Property="CaretBrush" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-        <Setter Property="SelectionBrush" Value="{DynamicResource TidalOceanBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource TidalMonoFont}" />
+        <Setter Property="FontSize" Value="40" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalTextBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource TidalTextBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource TidalMutedBrush}" />
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="MinWidth" Value="110" />
         <Setter Property="Padding" Value="10,0" />
         <Setter Property="Cursor" Value="SizeNS" />
@@ -55,16 +66,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="controls:NumberDial">
-                    <Border x:Name="Bd" CornerRadius="12" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Bd" BorderThickness="1" BorderBrush="{TemplateBinding BorderBrush}"
+                            Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
                         <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
                                       HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipBrush}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TidalBorderBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipHoverBrush}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TidalMutedBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -75,16 +87,17 @@
         </Setter>
     </Style>
 
-    <!-- The CURRENT value sits on a soft tinted card. -->
+    <!-- The CURRENT value sits in a bordered box. -->
     <Style x:Key="TidalCurrentCard" TargetType="Border">
-        <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="Padding" Value="6,2" />
-        <Setter Property="Margin" Value="0,2,0,4" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TidalBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource TidalSurfaceBrush}" />
+        <Setter Property="Padding" Value="4,2" />
+        <Setter Property="Margin" Value="0,2,0,0" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Background" Value="{DynamicResource TidalSunSoftBrush}" />
     </Style>
 
-    <!-- ===== Pill slider ===== -->
+    <!-- ===== Slider ===== -->
 
     <Style x:Key="TidalTrackButton" TargetType="RepeatButton">
         <Setter Property="Focusable" Value="False" />
@@ -102,16 +115,16 @@
         <Setter Property="Control.Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border Margin="-3" CornerRadius="18" BorderThickness="2" BorderBrush="{DynamicResource TidalOceanBrush}" />
+                    <Border Margin="-3" BorderThickness="1" BorderBrush="{DynamicResource TidalMutedBrush}" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <!-- A thick rounded slider: icon inside the track, the value inside the thumb.
-         Foreground is the fill colour; Tag is the SymbolRegular icon. -->
+    <!-- A flat square slider: a solid fill ending in a square thumb that shows the value.
+         Foreground is the fill colour; Tag is the SymbolRegular icon drawn on the fill. -->
     <Style x:Key="TidalSlider" TargetType="Slider">
-        <Setter Property="Height" Value="30" />
+        <Setter Property="Height" Value="28" />
         <Setter Property="Minimum" Value="0" />
         <Setter Property="Maximum" Value="100" />
         <Setter Property="SmallChange" Value="1" />
@@ -119,7 +132,7 @@
         <Setter Property="IsSnapToTickEnabled" Value="True" />
         <Setter Property="TickFrequency" Value="1" />
         <Setter Property="IsMoveToPointEnabled" Value="True" />
-        <Setter Property="Foreground" Value="{DynamicResource TidalSunBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalInvertBrush}" />
         <Setter Property="Tag" Value="{x:Static ui:SymbolRegular.BrightnessHigh20}" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource TidalSliderFocus}" />
         <Setter Property="Cursor" Value="Hand" />
@@ -127,10 +140,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
                     <Grid x:Name="Root" Height="{TemplateBinding Height}" Background="Transparent">
-                        <Border CornerRadius="15" Background="{DynamicResource TidalTrackBrush}" />
-                        <Border HorizontalAlignment="Left" CornerRadius="15" Background="{TemplateBinding Foreground}">
+                        <Border BorderThickness="1" BorderBrush="{DynamicResource TidalBorderBrush}" Background="{DynamicResource TidalTrackBrush}" />
+                        <Border HorizontalAlignment="Left" Background="{TemplateBinding Foreground}">
                             <Border.Width>
-                                <MultiBinding Converter="{StaticResource SliderFill}" ConverterParameter="30">
+                                <MultiBinding Converter="{StaticResource SliderFill}" ConverterParameter="28">
                                     <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
                                     <Binding Path="Minimum" RelativeSource="{RelativeSource TemplatedParent}" />
                                     <Binding Path="Maximum" RelativeSource="{RelativeSource TemplatedParent}" />
@@ -139,8 +152,8 @@
                             </Border.Width>
                         </Border>
                         <ui:SymbolIcon Symbol="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
-                                       FontSize="15" Margin="9,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TidalOnSunBrush}" IsHitTestVisible="False" />
+                                       FontSize="14" Margin="8,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TidalOnInvertBrush}" IsHitTestVisible="False" />
                         <Track x:Name="PART_Track">
                             <Track.DecreaseRepeatButton>
                                 <RepeatButton Style="{StaticResource TidalTrackButton}" Command="Slider.DecreaseLarge" />
@@ -149,19 +162,16 @@
                                 <RepeatButton Style="{StaticResource TidalTrackButton}" Command="Slider.IncreaseLarge" />
                             </Track.IncreaseRepeatButton>
                             <Track.Thumb>
-                                <Thumb Width="30" Height="30" Focusable="False">
+                                <Thumb Width="28" Height="28" Focusable="False">
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Grid Background="Transparent">
-                                                <Ellipse Margin="3" Fill="{DynamicResource TidalKnobBrush}">
-                                                    <Ellipse.Effect>
-                                                        <DropShadowEffect BlurRadius="6" ShadowDepth="1" Direction="270" Opacity="0.3" />
-                                                    </Ellipse.Effect>
-                                                </Ellipse>
-                                                <TextBlock FontSize="9.5" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource TidalKnobTextBrush}"
+                                            <Border BorderThickness="1" BorderBrush="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Slider}}"
+                                                    Background="{DynamicResource TidalBackgroundBrush}">
+                                                <TextBlock FontFamily="{StaticResource TidalMonoFont}" FontSize="10" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TidalTextBrush}"
                                                            Text="{Binding Value, RelativeSource={RelativeSource AncestorType=Slider}, StringFormat={}{0:0}}" />
-                                            </Grid>
+                                            </Border>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -179,34 +189,38 @@
     </Style>
 
     <Style x:Key="TidalContrastSlider" TargetType="Slider" BasedOn="{StaticResource TidalSlider}">
-        <Setter Property="Foreground" Value="{DynamicResource TidalContrastBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalSecondaryFillBrush}" />
         <Setter Property="Tag" Value="{x:Static ui:SymbolRegular.DarkTheme20}" />
     </Style>
 
     <Style x:Key="TidalVolumeSlider" TargetType="Slider" BasedOn="{StaticResource TidalSlider}">
-        <Setter Property="Foreground" Value="{DynamicResource TidalVolumeBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalSecondaryFillBrush}" />
         <Setter Property="Tag" Value="{x:Static ui:SymbolRegular.Speaker220}" />
     </Style>
 
-    <!-- ===== Chips ===== -->
+    <!-- ===== Buttons ===== -->
 
     <Style x:Key="TidalChip" TargetType="ButtonBase">
         <Setter Property="Padding" Value="11,6" />
+        <Setter Property="FontFamily" Value="{StaticResource TidalFont}" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-        <Setter Property="Background" Value="{DynamicResource TidalChipBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalTextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TidalBorderBrush}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ButtonBase">
-                    <Border x:Name="Bd" CornerRadius="9" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Bd" BorderThickness="1" BorderBrush="{TemplateBinding BorderBrush}"
+                            Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipHoverBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalHoverBrush}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TidalBorderStrongBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bd" Property="Opacity" Value="0.75" />
@@ -222,46 +236,58 @@
 
     <Style x:Key="TidalChipButton" TargetType="Button" BasedOn="{StaticResource TidalChip}" />
 
+    <!-- Solid, inverted: the one main action in a view. -->
+    <Style x:Key="TidalPrimaryButton" TargetType="Button" BasedOn="{StaticResource TidalChip}">
+        <Setter Property="Background" Value="{DynamicResource TidalInvertBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TidalInvertBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalOnInvertBrush}" />
+    </Style>
+
     <Style x:Key="TidalChipToggle" TargetType="ToggleButton" BasedOn="{StaticResource TidalChip}">
         <Style.Triggers>
             <Trigger Property="IsChecked" Value="True">
-                <Setter Property="Background" Value="{DynamicResource TidalOceanBrush}" />
-                <Setter Property="Foreground" Value="{DynamicResource TidalOnOceanBrush}" />
+                <Setter Property="Background" Value="{DynamicResource TidalInvertBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource TidalInvertBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TidalOnInvertBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
-    <!-- Small label on the monitor screen, e.g. "DDC/CI". -->
-    <Style x:Key="TidalScreenBadge" TargetType="Border">
-        <Setter Property="CornerRadius" Value="7" />
-        <Setter Property="Padding" Value="9,2" />
+    <!-- Small bordered label, e.g. "DDC/CI" or "AUTO". -->
+    <Style x:Key="TidalTag" TargetType="Border">
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TidalBorderStrongBrush}" />
+        <Setter Property="Padding" Value="6,1" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Background" Value="{DynamicResource TidalSunBrush}" />
-        <Setter Property="TextElement.Foreground" Value="{DynamicResource TidalOnSunBrush}" />
-        <Setter Property="TextElement.FontSize" Value="11" />
-        <Setter Property="TextElement.FontWeight" Value="Bold" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextElement.FontFamily" Value="{StaticResource TidalMonoFont}" />
+        <Setter Property="TextElement.FontSize" Value="10" />
+        <Setter Property="TextElement.FontWeight" Value="Medium" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource TidalMutedBrush}" />
     </Style>
 
-    <!-- ===== Tabs (segmented) ===== -->
+    <!-- ===== Tabs and segments ===== -->
 
     <Style x:Key="TidalTabItem" TargetType="ListBoxItem">
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontFamily" Value="{StaticResource TidalFont}" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalMutedBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="Bd" CornerRadius="9" Padding="16,7" Margin="1,0" Background="Transparent">
+                    <Border x:Name="Bd" Padding="16,7" Background="Transparent">
                         <ContentPresenter VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalHoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TidalTextBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipHoverBrush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalInvertBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TidalOnInvertBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -270,7 +296,6 @@
     </Style>
 
     <Style x:Key="TidalTabs" TargetType="ListBox">
-        <Setter Property="Background" Value="{DynamicResource TidalPanelBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
@@ -284,7 +309,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBox">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="12" Padding="4">
+                    <Border BorderThickness="1" BorderBrush="{DynamicResource TidalBorderBrush}"
+                            Background="{DynamicResource TidalBackgroundBrush}" Padding="3">
                         <ItemsPresenter />
                     </Border>
                 </ControlTemplate>
@@ -293,29 +319,27 @@
         <Setter Property="ItemContainerStyle" Value="{StaticResource TidalTabItem}" />
     </Style>
 
-    <!-- ===== Choice tiles and segments ===== -->
-
     <Style x:Key="TidalModeTile" TargetType="RadioButton">
-        <Setter Property="Margin" Value="6" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalTextBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" CornerRadius="14" Padding="16,14" BorderThickness="2"
-                            BorderBrush="Transparent" Background="{DynamicResource TidalPanelBrush}">
+                    <Border x:Name="Bd" Padding="16,14" BorderThickness="1" Margin="-1,0,0,0"
+                            BorderBrush="{DynamicResource TidalBorderBrush}" Background="{DynamicResource TidalBackgroundBrush}">
                         <ContentPresenter />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TidalOceanBrush}" />
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalOceanSoftBrush}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TidalTextBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalSurfaceBrush}" />
+                            <Setter TargetName="Bd" Property="Panel.ZIndex" Value="1" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.45" />
+                            <Setter Property="Opacity" Value="0.4" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -325,22 +349,23 @@
 
     <Style x:Key="TidalSegment" TargetType="RadioButton">
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FontFamily" Value="{StaticResource TidalFont}" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource TidalMutedBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" CornerRadius="9" Padding="14,7" Background="Transparent">
+                    <Border x:Name="Bd" Padding="14,7" Background="Transparent">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalChipBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalHoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalOceanBrush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource TidalOnOceanBrush}" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TidalInvertBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource TidalOnInvertBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -348,11 +373,21 @@
         </Setter>
     </Style>
 
-    <!-- ===== Panels ===== -->
+    <!-- ===== Panels and lines ===== -->
 
     <Style x:Key="TidalPanel" TargetType="Border">
-        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TidalBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource TidalBackgroundBrush}" />
         <Setter Property="Padding" Value="18,16" />
-        <Setter Property="Background" Value="{DynamicResource TidalPanelBrush}" />
+    </Style>
+
+    <!-- Dashed divider lines, Better Auth style. -->
+    <Style x:Key="TidalDashedLine" TargetType="Rectangle">
+        <Setter Property="Stroke" Value="{DynamicResource TidalBorderBrush}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeDashArray" Value="4 4" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
 </ResourceDictionary>

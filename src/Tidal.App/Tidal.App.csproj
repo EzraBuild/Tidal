@@ -17,6 +17,12 @@
     <Page Include="App.xaml" />
   </ItemGroup>
 
+  <!-- Geist and Geist Mono (SIL Open Font License, see Assets/Fonts/OFL.txt), embedded so the app
+       looks the same on every PC. -->
+  <ItemGroup>
+    <Resource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Tidal.Core\Tidal.Core.csproj" />
   </ItemGroup>

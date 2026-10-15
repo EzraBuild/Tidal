@@ -38,8 +38,7 @@ public partial class TrayPopup : FluentWindow
     {
         InitializeComponent();
         DataContext = _viewModel = viewModel;
-        LogoImage.Source = Logo.Render(36, Logo.BrandColor);
-        SystemThemeWatcher.Watch(this, WindowBackdropType.Acrylic);
+        SystemThemeWatcher.Watch(this, WindowBackdropType.None, updateAccents: false); // TidalTheme owns the accent
 
         SourceInitialized += (_, _) => HideFromAltTab();
         Deactivated += (_, _) => HidePopup();
