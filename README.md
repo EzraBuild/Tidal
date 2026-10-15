@@ -12,7 +12,7 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 | 2 | Tray popup with per-monitor sliders and "link all" | Done |
 | 3 | Global hotkeys with per-monitor min/max | Done |
 | 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Done |
-| 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Planned |
+| 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Done |
 | 6 | Software dimming below 0% / for monitors without DDC/CI | Planned |
 | 7 | Per-app presets | Planned |
 | 8 | JSON settings, start with Windows | Planned |
@@ -30,7 +30,8 @@ src/Tidal.Core         Hardware layer, no UI
 src/Tidal.App          WPF tray app (WPF-UI for Windows 11 styling: Mica/Acrylic, rounded corners)
   Tray/                Notification-area icon, the brightness popup, the logo
   Osd/                 On-screen brightness indicator for shortcuts
-  Controls/            Shortcut recorder
+  Themes/              Tidal's palette (light/dark) and control styles: pill slider, chips, tabs, tiles
+  Controls/            Shortcut recorder, number dial, day curve chart, mode picker
   Services/            Global hotkeys, settings persistence
   ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
   Interop/             Win32 for the tray icon, popup placement and hotkeys
@@ -68,8 +69,15 @@ All I/O for a display goes through its own `DeviceCommandQueue`, a dedicated thr
 Tidal runs in the notification area (on Windows 11 it starts in the "Show hidden icons" flyout;
 drag it onto the taskbar to keep it visible).
 
-- **Click the icon** to open the brightness popup: one slider per display. The mouse wheel moves a
-  slider. Click elsewhere or press Esc to close.
+- **Click the icon** to open the brightness popup: a slider per display (the mouse wheel moves it),
+  the adaptive mode picker, presets (0–100% of each display's range), Link all, Settings and Quit.
+  Click elsewhere or press Esc to close.
+- **Inputs and volume**: monitors that list their video inputs get an input pill (e.g.
+  "DisplayPort 1") under their slider and on their Settings tab; choosing another input makes the
+  monitor show that device instead of this PC. Monitors with speakers get a volume slider.
+- **Settings** has a tab per display (brightness MIN / CURRENT / MAX as big numbers you can scroll,
+  type or arrow-key, contrast, and the display's Adaptive switch), an Adaptive tab with today's
+  brightness curve, and a Shortcuts tab.
 - **Link all** moves every display to the same relative level as the slider you drag, within each
   display's own limits (so with no limits set, they all get the same value).
 - **Brightness shortcuts** work in any app: Ctrl+Alt+PageUp / Ctrl+Alt+PageDown by default, 5% per
@@ -109,4 +117,5 @@ dotnet run --project tools/Tidal.Diag -- --caps         # include DDC/CI capabil
 dotnet run --project tools/Tidal.Diag -- --test-write   # change brightness briefly, verify, restore
 dotnet run --project tools/Tidal.Diag -- --set 2 70     # set display 2 to 70%
 dotnet run --project tools/Tidal.Diag -- --watch-builtin 30   # print built-in brightness changes
+dotnet run --project tools/Tidal.Diag -- --set-input 1 11     # switch display 1 to HDMI 1 (careful!)
 ```
