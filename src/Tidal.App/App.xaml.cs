@@ -25,6 +25,7 @@ public partial class App : Application
     private SingleInstance? _singleInstance;
     private SettingsService? _settings;
     private DisplayListViewModel? _displays;
+    private AdaptiveViewModel? _adaptive;
     private ShortcutsViewModel? _shortcuts;
     private HotkeyManager? _hotkeys;
     private TrayIcon? _trayIcon;
@@ -48,6 +49,7 @@ public partial class App : Application
         _settings = new SettingsService(new SettingsStore(SettingsStore.DefaultPath));
         _displays = new DisplayListViewModel(_settings);
         _displays.PropertyChanged += OnDisplaysPropertyChanged;
+        _adaptive = new AdaptiveViewModel(_settings.Current.Adaptive, _displays, _settings.ScheduleSave);
 
         _popup = new TrayPopup(_displays);
         _popup.SettingsRequested += (_, _) => OpenSettings();
@@ -74,6 +76,7 @@ public partial class App : Application
         _hotkeys?.Dispose();
         _trayIcon?.Dispose();
         _popup?.AllowClose();
+        _adaptive?.Dispose();
         _displays?.Dispose(); // flushes pending brightness writes
         _singleInstance?.Dispose();
         base.OnExit(e);
@@ -116,7 +119,7 @@ public partial class App : Application
         _popup?.HidePopup();
         if (_settingsWindow is null)
         {
-            _settingsWindow = new SettingsWindow(new SettingsViewModel(_displays!, _shortcuts!));
+            _settingsWindow = new SettingsWindow(new SettingsViewModel(_displays!, _adaptive!, _shortcuts!));
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         }
         _settingsWindow.Show();

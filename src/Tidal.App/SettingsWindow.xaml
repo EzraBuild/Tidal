@@ -148,6 +148,29 @@
                         </StackPanel>
                     </Grid>
 
+                    <!-- Adaptive brightness for this display, and the user's adjustment on top of it. -->
+                    <Grid Margin="0,12,0,0" Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:SymbolIcon Symbol="WeatherSunny20" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Adaptive brightness" Style="{StaticResource Label}" />
+                            <TextBlock Text="{Binding AdaptiveOffsetText}" Style="{StaticResource Caption}"
+                                       Visibility="{Binding HasAdaptiveOffset, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <ui:Button Content="Reset" Appearance="Transparent" Margin="0,0,8,0"
+                                       Command="{Binding ResetAdaptiveOffsetCommand}"
+                                       ToolTip="Forget your adjustment and follow adaptive brightness exactly"
+                                       Visibility="{Binding HasAdaptiveOffset, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:ToggleSwitch IsChecked="{Binding IsAdaptive}"
+                                             AutomationProperties.Name="{Binding Name, StringFormat={}{0} adaptive brightness}" />
+                        </StackPanel>
+                    </Grid>
+
                     <ui:InfoBar Margin="0,12,0,0" Severity="Warning" IsClosable="False"
                                 Title="No hardware control"
                                 Message="{Binding Note}"
@@ -188,6 +211,72 @@
                                      VerticalAlignment="Top" HorizontalAlignment="Center"
                                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
                 </Grid>
+
+                <!-- Adaptive brightness -->
+                <TextBlock Text="Adaptive brightness" Style="{StaticResource SectionTitle}" Margin="0,12,0,0" />
+                <TextBlock Style="{StaticResource Caption}" Margin="0,2,0,12"
+                           Text="Displays with adaptive brightness on follow one level, scaled into each display's limits. Changes you make yourself are kept as an adjustment on top." />
+
+                <Border Style="{StaticResource Card}" DataContext="{Binding Adaptive}">
+                    <StackPanel>
+                        <RadioButton GroupName="AdaptiveMode" Content="Off" IsChecked="{Binding IsOff}" />
+                        <RadioButton GroupName="AdaptiveMode" Margin="0,8,0,0" IsChecked="{Binding IsSun}" AutomationProperties.Name="Follow the sun">
+                            <StackPanel>
+                                <TextBlock Text="Follow the sun" />
+                                <TextBlock Style="{StaticResource Caption}" Text="Dim at night, brightest at midday, worked out from your location." />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton GroupName="AdaptiveMode" Margin="0,8,0,0" IsChecked="{Binding IsBuiltIn}" AutomationProperties.Name="Match the built-in display"
+                                     IsEnabled="{Binding IsBuiltInAvailable}">
+                            <StackPanel>
+                                <TextBlock Text="Match the built-in display" />
+                                <TextBlock Style="{StaticResource Caption}" Text="{Binding BuiltInDescription}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton GroupName="AdaptiveMode" Margin="0,8,0,0" IsChecked="{Binding IsSensor}" AutomationProperties.Name="Follow the light sensor"
+                                     IsEnabled="{Binding IsSensorAvailable}">
+                            <StackPanel>
+                                <TextBlock Text="Follow the light sensor" />
+                                <TextBlock Style="{StaticResource Caption}" Text="{Binding SensorDescription}" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <!-- Location, for the sun -->
+                        <StackPanel Margin="0,16,0,0" Visibility="{Binding IsSun, Converter={StaticResource BoolToVisibility}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="28" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ui:SymbolIcon Symbol="Location20" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Location" Style="{StaticResource Label}" />
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <ui:NumberBox Width="112" PlaceholderText="Latitude" Minimum="-90" Maximum="90"
+                                                  MaxDecimalPlaces="2" SpinButtonPlacementMode="Hidden" ClearButtonEnabled="False"
+                                                  AutomationProperties.Name="Latitude"
+                                                  Value="{Binding Latitude, Mode=TwoWay}" />
+                                    <ui:NumberBox Width="112" Margin="8,0,0,0" PlaceholderText="Longitude" Minimum="-180" Maximum="180"
+                                                  MaxDecimalPlaces="2" SpinButtonPlacementMode="Hidden" ClearButtonEnabled="False"
+                                                  AutomationProperties.Name="Longitude"
+                                                  Value="{Binding Longitude, Mode=TwoWay}" />
+                                    <ui:Button Margin="8,0,0,0" Padding="9"
+                                               Icon="{ui:SymbolIcon MyLocation20}"
+                                               Command="{Binding UseMyLocationCommand}"
+                                               ToolTip="Use my location (asks Windows)"
+                                               AutomationProperties.Name="Use my location" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding LocationError}" Style="{StaticResource ErrorText}" Margin="28,4,0,0" />
+                        </StackPanel>
+
+                        <Border Margin="0,14,0,0" Padding="0,10,0,0" BorderThickness="0,1,0,0"
+                                BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}">
+                            <TextBlock Text="{Binding Status}" Style="{StaticResource Caption}"
+                                       AutomationProperties.AutomationId="AdaptiveStatus" />
+                        </Border>
+                    </StackPanel>
+                </Border>
 
                 <!-- Shortcuts -->
                 <TextBlock Text="Brightness shortcuts" Style="{StaticResource SectionTitle}" Margin="0,12,0,0" />
