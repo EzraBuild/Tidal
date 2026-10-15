@@ -4,6 +4,7 @@
 //   Tidal.Diag --caps         also fetch DDC/CI capabilities strings (slow)
 //   Tidal.Diag --test-write   briefly change each display's brightness, read it back, then restore it
 //   Tidal.Diag --set N P      set display N's brightness to P percent
+//   Tidal.Diag --set-input N C   switch display N to input code C (hex; 0F DisplayPort 1, 11 HDMI 1, ...)
 //   Tidal.Diag --watch-builtin S   print the built-in screen's brightness as it changes, for S seconds
 //   Tidal.Diag --verbose      include debug log lines
 
@@ -66,6 +67,31 @@ if (watchIndex >= 0)
     return 0;
 }
 
+int inputIndex = Array.IndexOf(args, "--set-input");
+if (inputIndex >= 0)
+{
+    if (inputIndex + 2 >= args.Length
+        || !int.TryParse(args[inputIndex + 1], out int number) || number < 1 || number > displays.Count
+        || !byte.TryParse(args[inputIndex + 2], System.Globalization.NumberStyles.HexNumber, null, out byte code))
+    {
+        Console.WriteLine($"Usage: --set-input <display 1-{displays.Count}> <input code in hex, e.g. 11 for HDMI 1>");
+        return 1;
+    }
+    var display = displays[number - 1];
+    // Inputs arrive with the capabilities, a moment after detection.
+    for (int i = 0; i < 50 && display.InputSources.Count == 0; i++) await Task.Delay(100);
+    var target = new InputSource(code);
+    if (!display.InputSources.Contains(target))
+    {
+        Console.WriteLine($"{display.Name} doesn't list {target}. Inputs: {string.Join(", ", display.InputSources)}");
+        return 1;
+    }
+    Console.WriteLine();
+    Console.WriteLine($"{display.Name}: was on {display.CurrentInput?.ToString() ?? "unknown"}, switching to {target}");
+    display.SetInput(target);
+    await display.RefreshAsync(); // queued behind the write, so it has been sent
+}
+
 int setIndex = Array.IndexOf(args, "--set");
 if (setIndex >= 0)
 {
@@ -109,6 +135,8 @@ static async Task PrintCapabilities(DdcDisplay display)
     }
     Console.WriteLine($"    Capabilities ({stopwatch.ElapsedMilliseconds} ms): model {capabilities.Model ?? "?"}, MCCS {capabilities.MccsVersion ?? "?"}, {capabilities.VcpCodes.Count} VCP codes");
     Console.WriteLine($"      Input source (0x60): {Describe(capabilities, VcpCode.InputSource)}");
+    if (capabilities.Supports(VcpCode.InputSource) && await display.ReadVcpAsync(VcpCode.InputSource) is { } input)
+        Console.WriteLine($"      Current input:       {new InputSource((byte)(input.Current & 0xFF))} (0x{input.Current & 0xFF:X2})");
     Console.WriteLine($"      Volume (0x62):       {Describe(capabilities, VcpCode.AudioVolume)}");
     Console.WriteLine($"      Raw: {capabilities.Raw}");
 }
