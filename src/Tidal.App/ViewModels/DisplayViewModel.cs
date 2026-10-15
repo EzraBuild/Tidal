@@ -26,6 +26,7 @@ public sealed partial class DisplayViewModel : ObservableObject
     private long _inputSwitchedAt;
     // The adaptive level this display is following, or null when adaptive brightness isn't driving it.
     private double? _adaptiveLevel;
+    private bool _loaded;
 
     public DisplayViewModel(Display display, DisplaySettings settings, Action settingsChanged)
     {
@@ -46,29 +47,38 @@ public sealed partial class DisplayViewModel : ObservableObject
     public ScreenRect Bounds => _display.Info.Bounds;
     public SymbolRegular Icon => _display.Info.IsInternal ? SymbolRegular.Laptop24 : SymbolRegular.Desktop24;
 
-    /// <summary>How Tidal reaches the hardware, for the badge on the monitor illustration.</summary>
-    public string MethodLabel => _display.Method switch
+    /// <summary>How Tidal changes the brightness, for the badge on the monitor illustration.</summary>
+    public string MethodLabel => !HasHardwareBrightness ? "Software dimming" : _display.Method switch
     {
         ControlMethod.DdcCi => "DDC/CI",
         ControlMethod.Wmi => "Windows brightness",
-        _ => "No hardware control",
+        _ => "Software dimming",
     };
 
-    public string Details => _display.Method switch
-    {
-        ControlMethod.DdcCi => $"{_display.Info.Connection} · DDC/CI",
-        ControlMethod.Wmi => $"{_display.Info.Connection} · Windows brightness",
-        _ => $"{_display.Info.Connection} · No hardware control",
-    };
-
+    /// <summary>
+    /// True when Tidal sets the display's own brightness. Otherwise brightness is software dimming:
+    /// an overlay that darkens the picture (see <see cref="SoftwareDimming"/>).
+    /// </summary>
     [ObservableProperty]
-    private bool _supportsBrightness;
+    [NotifyPropertyChangedFor(nameof(UsesSoftwareBrightness), nameof(MethodLabel), nameof(Range), nameof(SliderMinimum))]
+    private bool _hasHardwareBrightness;
+
+    public bool UsesSoftwareBrightness => !HasHardwareBrightness;
 
     [ObservableProperty]
     private bool _supportsContrast;
 
+    /// <summary>
+    /// Brightness in percent. Below zero (only with <see cref="DimBelowZero"/>) the hardware stays
+    /// at its lowest and the picture is dimmed in software. For a display with no hardware control
+    /// it's all software dimming.
+    /// </summary>
     [ObservableProperty]
     private double _brightness;
+
+    /// <summary>How dark this display's dimming overlay is: 0 (none) to <see cref="SoftwareDimming.MaxOpacity"/>.</summary>
+    [ObservableProperty]
+    private double _dimOpacity;
 
     [ObservableProperty]
     private double _contrast;
@@ -99,8 +109,31 @@ public sealed partial class DisplayViewModel : ObservableObject
 
     public bool HasNote => Note is not null;
 
-    /// <summary>The brightness band Tidal keeps this display in.</summary>
-    public BrightnessRange Range => _settings.BrightnessRange;
+    /// <summary>The brightness band Tidal keeps this display in, continuing below zero when it dims below zero.</summary>
+    public BrightnessRange Range => new(_settings.MinBrightness, _settings.MaxBrightness, belowZero: HasHardwareBrightness && _settings.DimBelowZero);
+
+    /// <summary>Where the brightness slider starts: below zero when dimming below zero, otherwise 0.</summary>
+    public double SliderMinimum => Math.Min(Range.Bottom, 0);
+
+    /// <summary>
+    /// Keep dimming in software after the display reaches its lowest brightness. Only for displays
+    /// with hardware brightness; the others are dimmed in software all the way.
+    /// </summary>
+    public bool DimBelowZero
+    {
+        get => _settings.DimBelowZero;
+        set
+        {
+            if (value == _settings.DimBelowZero) return;
+            _settings.DimBelowZero = value;
+            _settingsChanged();
+            // Out of the dimmed zone first, so the slider's minimum never rises above its value.
+            if (!value && Brightness < 0) SetBrightnessQuietly(Range.Min);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Range));
+            OnPropertyChanged(nameof(SliderMinimum));
+        }
+    }
 
     /// <summary>Lowest brightness Tidal will set. Nullable because NumberBox edits a double?.</summary>
     public double? MinBrightness
@@ -161,14 +194,11 @@ public sealed partial class DisplayViewModel : ObservableObject
     /// Sets brightness to <paramref name="fraction"/> of the way between this display's limits, as
     /// a user change (so under adaptive brightness it becomes the offset).
     /// </summary>
-    public void SetLevel(double fraction)
-    {
-        if (SupportsBrightness) SetBrightnessQuietly(Range.FromFraction(fraction));
-    }
+    public void SetLevel(double fraction) => SetBrightnessQuietly(Range.FromFraction(fraction));
 
     partial void OnBrightnessChanged(double value)
     {
-        if (_loadingFromDisplay || !SupportsBrightness) return;
+        if (_loadingFromDisplay) return;
 
         int percent = (int)Math.Round(value);
         int allowed = Range.Clamp(percent);
@@ -179,18 +209,43 @@ public sealed partial class DisplayViewModel : ObservableObject
         }
 
         _lastEdit = Stopwatch.GetTimestamp();
-        _display.SetBrightness(percent);
+        ApplyBrightness(percent);
 
         // Any change that didn't come from adaptive brightness (slider, hotkey, Link all, a new
         // limit) becomes the user's offset, so the next adaptive update keeps it.
         if (!_applyingAdaptive && _adaptiveLevel is double adaptive)
         {
-            _settings.AdaptiveOffset = Math.Clamp(Range.ToFraction(percent) - adaptive, -1, 1);
+            _settings.AdaptiveOffset = Math.Clamp(Range.ToFraction(percent) - adaptive, -DisplaySettings.MaxAdaptiveOffset, DisplaySettings.MaxAdaptiveOffset);
             _settingsChanged();
             OnAdaptiveOffsetChanged();
         }
 
         if (!_suppressEditEvent) BrightnessEdited?.Invoke(this, EventArgs.Empty);
+    }
+
+    // Sends a brightness to the hardware, the dimming overlay, or both.
+    private void ApplyBrightness(int percent)
+    {
+        if (UsesSoftwareBrightness)
+        {
+            DimOpacity = SoftwareDimming.ForSoftwareBrightness(percent);
+            Remember(belowZero: 0, software: percent);
+            return;
+        }
+
+        if (percent >= 0) _display.SetBrightness(percent);
+        else if (_display.Brightness is not int hardware || hardware > Range.Min) _display.SetBrightness(Range.Min); // dimming below zero starts from the lowest
+        DimOpacity = SoftwareDimming.ForBelowZero(percent);
+        Remember(belowZero: Math.Max(0, -percent), software: _settings.SoftwareBrightness);
+    }
+
+    // Software dimming has no hardware to read it back from, so it's kept in the settings.
+    private void Remember(int belowZero, int? software)
+    {
+        if (_settings.BelowZeroLevel == belowZero && _settings.SoftwareBrightness == software) return;
+        _settings.BelowZeroLevel = belowZero;
+        _settings.SoftwareBrightness = software;
+        _settingsChanged();
     }
 
     partial void OnContrastChanged(double value)
@@ -220,11 +275,7 @@ public sealed partial class DisplayViewModel : ObservableObject
     }
 
     /// <summary>One hotkey press: brighter or dimmer by <paramref name="delta"/>, within the limits.</summary>
-    public void StepBrightness(int delta)
-    {
-        if (!SupportsBrightness) return;
-        Brightness = Range.Step((int)Math.Round(Brightness), delta);
-    }
+    public void StepBrightness(int delta) => Brightness = Range.Step((int)Math.Round(Brightness), delta);
 
     /// <summary>
     /// Follows another display under "link all": takes the same relative position within this
@@ -241,7 +292,6 @@ public sealed partial class DisplayViewModel : ObservableObject
         bool wasFollowing = _adaptiveLevel is not null;
         _adaptiveLevel = level;
         if (!wasFollowing) OnAdaptiveOffsetChanged();
-        if (!SupportsBrightness) return;
 
         _applyingAdaptive = true;
         try
@@ -300,17 +350,17 @@ public sealed partial class DisplayViewModel : ObservableObject
 
     private void SetLimits(int min, int max)
     {
-        var range = new BrightnessRange(min, max);
-        if (range != Range)
+        var limits = new BrightnessRange(min, max);
+        if (limits.Min != _settings.MinBrightness || limits.Max != _settings.MaxBrightness)
         {
-            (_settings.MinBrightness, _settings.MaxBrightness) = (range.Min, range.Max);
+            (_settings.MinBrightness, _settings.MaxBrightness) = (limits.Min, limits.Max);
             _settingsChanged();
             OnPropertyChanged(nameof(Range));
             OnPropertyChanged(nameof(LimitsDescription));
 
             // Respect the new limits right away rather than at the next change.
             int current = (int)Math.Round(Brightness);
-            if (SupportsBrightness && range.Clamp(current) != current) SetBrightnessQuietly(range.Clamp(current));
+            if (Range.Clamp(current) != current) SetBrightnessQuietly(Range.Clamp(current));
         }
         // Always re-raise: the box may show a value that was just adjusted (e.g. min typed above max).
         OnPropertyChanged(nameof(MinBrightness));
@@ -338,13 +388,33 @@ public sealed partial class DisplayViewModel : ObservableObject
         _loadingFromDisplay = true;
         try
         {
-            SupportsBrightness = _display.SupportsBrightness;
+            bool hardware = _display.SupportsBrightness;
+            bool controlChanged = !_loaded || hardware != HasHardwareBrightness; // e.g. a monitor that answered only after waking
+            HasHardwareBrightness = hardware;
             SupportsContrast = _display.SupportsContrast;
             bool recentlyEdited = _lastEdit != 0 && Stopwatch.GetElapsedTime(_lastEdit) < EditHold;
-            if (!recentlyEdited)
+
+            if (!hardware)
+            {
+                if (controlChanged) ShowLoadedBrightness(_settings.SoftwareBrightness ?? 100, SoftwareDimming.ForSoftwareBrightness);
+            }
+            else if (!recentlyEdited || controlChanged)
             {
                 // Shown as read, even outside the limits: Tidal only enforces them when it changes the value.
-                Brightness = _display.Brightness ?? 0;
+                int read = _display.Brightness ?? 0;
+                // Dimming below zero carries on while the hardware is still at its lowest; a brighter
+                // reading (the monitor's own buttons) ends it.
+                bool stillBelowZero = Range.BelowZero && _settings.BelowZeroLevel > 0 && read <= Range.Min;
+                if (!stillBelowZero && _settings.BelowZeroLevel > 0)
+                {
+                    _settings.BelowZeroLevel = 0;
+                    _settingsChanged();
+                }
+                ShowLoadedBrightness(stillBelowZero ? -_settings.BelowZeroLevel : read, SoftwareDimming.ForBelowZero);
+            }
+
+            if (!recentlyEdited)
+            {
                 Contrast = _display.Contrast ?? 0;
                 Volume = _display.Volume ?? 0;
             }
@@ -353,12 +423,19 @@ public sealed partial class DisplayViewModel : ObservableObject
             bool recentlySwitched = _inputSwitchedAt != 0 && Stopwatch.GetElapsedTime(_inputSwitchedAt) < InputSwitchHold;
             if (!recentlySwitched) CurrentInput = _display.CurrentInput;
             Note = _display.Note;
-            OnPropertyChanged(nameof(Details));
             OnPropertyChanged(nameof(MethodLabel));
+            _loaded = true;
         }
         finally
         {
             _loadingFromDisplay = false;
         }
+    }
+
+    // While loading, brightness changes don't reach the hardware, so the overlay is set here.
+    private void ShowLoadedBrightness(int percent, Func<int, double> dimming)
+    {
+        Brightness = percent;
+        DimOpacity = dimming(percent);
     }
 }

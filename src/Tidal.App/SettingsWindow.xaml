@@ -69,14 +69,13 @@
                 </Grid.RowDefinitions>
 
                 <!-- Brightness: lowest, current, highest -->
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                            Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="BRIGHTNESS" Style="{StaticResource TidalEyebrow}" Margin="0,0,0,10" />
                     <controls:NumberDial Value="{Binding MinBrightness}"
                                          AutomationProperties.Name="{Binding Name, StringFormat={}{0} lowest brightness}" />
                     <TextBlock Text="MIN" Style="{StaticResource TidalDialLabel}" />
                     <Border Style="{StaticResource TidalCurrentCard}">
-                        <controls:NumberDial FontSize="52" Value="{Binding Brightness}"
+                        <controls:NumberDial FontSize="52" Minimum="{Binding SliderMinimum}" Value="{Binding Brightness}"
                                              AutomationProperties.Name="{Binding Name, StringFormat={}{0} current brightness}" />
                     </Border>
                     <TextBlock Text="CURRENT" Style="{StaticResource TidalDialLabel}" />
@@ -107,7 +106,7 @@
                                     <Slider Margin="0,22,0,0" Style="{StaticResource TidalSlider}"
                                             ToolTip="{Binding LimitsDescription}"
                                             AutomationProperties.Name="{Binding Name, StringFormat={}{0} brightness}"
-                                            Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}"
+                                            Minimum="{Binding SliderMinimum}"
                                             Value="{Binding Brightness}" />
                                     <Slider Margin="0,8,0,0" Style="{StaticResource TidalContrastSlider}"
                                             AutomationProperties.Name="{Binding Name, StringFormat={}{0} contrast}"
@@ -156,7 +155,7 @@
                                                  AutomationProperties.Name="{Binding Name, StringFormat={}{0} volume}" />
                         </Border>
                     </StackPanel>
-                    <StackPanel Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
                         <TextBlock Text="ADAPTIVE" Style="{StaticResource TidalEyebrow}" Margin="0,0,0,10" />
                         <ui:ToggleSwitch HorizontalAlignment="Center" IsChecked="{Binding IsAdaptive}"
                                          AutomationProperties.Name="{Binding Name, StringFormat={}{0} adaptive brightness}" />
@@ -168,16 +167,25 @@
                                 ToolTip="Forget your adjustment and follow adaptive brightness exactly"
                                 Visibility="{Binding HasAdaptiveOffset, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
+                    <StackPanel Margin="0,26,0,0" Visibility="{Binding HasHardwareBrightness, Converter={StaticResource BoolToVisibility}}"
+                                ToolTip="Keep dimming in software after the display reaches its lowest brightness. The slider and shortcuts go below 0.">
+                        <TextBlock Text="DIM BELOW 0" Style="{StaticResource TidalEyebrow}" Margin="0,0,0,10" />
+                        <ui:ToggleSwitch HorizontalAlignment="Center" IsChecked="{Binding DimBelowZero}"
+                                         AutomationProperties.Name="{Binding Name, StringFormat={}{0} dim below zero}" />
+                    </StackPanel>
                 </StackPanel>
 
-                <!-- Why this display can't be controlled -->
+                <!-- Why this display is dimmed in software -->
                 <Border Grid.Row="1" Grid.ColumnSpan="3" Margin="0,28,0,0" MaxWidth="620" Style="{StaticResource TidalPanel}"
-                        Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}">
+                        Visibility="{Binding UsesSoftwareBrightness, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Warning20" Margin="0,1,12,0" VerticalAlignment="Top" Foreground="{DynamicResource TidalWarningBrush}" />
                         <StackPanel>
-                            <TextBlock Text="No hardware control" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding Note}" Margin="0,4,0,0" MaxWidth="540" Style="{StaticResource TidalCaption}" />
+                            <TextBlock Text="No hardware control: dimmed in software" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Note}" Margin="0,4,0,0" MaxWidth="540" Style="{StaticResource TidalCaption}"
+                                       Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Margin="0,4,0,0" MaxWidth="540" Style="{StaticResource TidalCaption}"
+                                       Text="Tidal darkens the picture instead of the backlight, so it doesn't save power." />
                         </StackPanel>
                     </StackPanel>
                 </Border>

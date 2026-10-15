@@ -93,11 +93,12 @@
                                         </Border>
                                     </Grid>
 
+                                    <!-- Minimum before Value, so a value below zero is never clipped to the default minimum. -->
                                     <Slider Margin="0,10,0,0" Style="{StaticResource TidalSlider}"
                                             behaviors:SliderWheel.Step="2"
                                             ToolTip="{Binding LimitsDescription}"
                                             AutomationProperties.Name="{Binding Name, StringFormat={}{0} brightness}"
-                                            Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}"
+                                            Minimum="{Binding SliderMinimum}"
                                             Value="{Binding Brightness}" />
 
                                     <Slider Margin="0,6,0,0" Style="{StaticResource TidalVolumeSlider}"
@@ -109,9 +110,9 @@
                                     <controls:InputPicker Margin="0,8,0,0" HorizontalAlignment="Left"
                                                           Visibility="{Binding HasInputs, Converter={StaticResource BoolToVisibility}}" />
 
-                                    <TextBlock Margin="0,6,0,0" Text="No hardware control" ToolTip="{Binding Note}"
+                                    <TextBlock Margin="0,6,0,0" Text="Software dimming · no hardware control" ToolTip="{Binding Note}"
                                                Style="{StaticResource TidalCaption}"
-                                               Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" />
+                                               Visibility="{Binding UsesSoftwareBrightness, Converter={StaticResource BoolToVisibility}}" />
                                 </StackPanel>
                                 <Rectangle Height="1" VerticalAlignment="Bottom" Style="{StaticResource TidalDashedLine}" />
                             </Grid>

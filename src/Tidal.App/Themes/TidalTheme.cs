@@ -38,6 +38,8 @@ internal static class TidalTheme
         Set(resources, "TidalSecondaryFillBrush", dark ? "#8A8A8A" : "#8F8F8F");
         Set(resources, "TidalWarningBrush", dark ? "#F5A524" : "#B45309");
         resources["TidalGridBrush"] = CreateGridBrush(dark ? Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x0C, 0x00, 0x00, 0x00));
+        // Diagonal hatching marks the below-zero (software dimming) part of a brightness slider.
+        resources["TidalHatchBrush"] = CreateHatchBrush(dark ? Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x38, 0x00, 0x00, 0x00));
 
         var accent = (Color)ColorConverter.ConvertFromString(dark ? "#FAFAFA" : "#0A0A0A");
         ApplicationAccentColorManager.Apply(accent, accent, accent, accent);
@@ -56,6 +58,23 @@ internal static class TidalTheme
             Viewport = new Rect(0, 0, 40, 40),
             ViewportUnits = BrushMappingMode.Absolute,
             Viewbox = new Rect(0, 0, 40, 40),
+            ViewboxUnits = BrushMappingMode.Absolute,
+            Stretch = Stretch.None,
+        };
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>Thin diagonal lines, 6 px apart.</summary>
+    private static DrawingBrush CreateHatchBrush(Color line)
+    {
+        var pen = new Pen(new SolidColorBrush(line), 1);
+        var brush = new DrawingBrush(new GeometryDrawing(null, pen, new LineGeometry(new Point(0, 6), new Point(6, 0))))
+        {
+            TileMode = TileMode.Tile,
+            Viewport = new Rect(0, 0, 6, 6),
+            ViewportUnits = BrushMappingMode.Absolute,
+            Viewbox = new Rect(0, 0, 6, 6),
             ViewboxUnits = BrushMappingMode.Absolute,
             Stretch = Stretch.None,
         };

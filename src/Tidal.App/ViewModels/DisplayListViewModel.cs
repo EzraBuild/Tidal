@@ -77,7 +77,7 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     /// <summary>One line per display, for the tray icon tooltip.</summary>
     public string Summary => Displays.Count == 0
         ? "Tidal"
-        : "Tidal\n" + string.Join("\n", Displays.Select(d => d.SupportsBrightness ? $"{d.Name}: {d.Brightness:0}%" : $"{d.Name}: no control"));
+        : "Tidal\n" + string.Join("\n", Displays.Select(d => $"{d.Name}: {d.Brightness:0}%"));
 
     /// <summary>Re-detects displays. Requests made while a detection is running are merged into one follow-up run.</summary>
     [RelayCommand(CanExecute = nameof(CanRefresh))]
@@ -117,17 +117,16 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     /// </summary>
     public IReadOnlyList<DisplayViewModel> StepBrightness(int delta, DisplayViewModel? only)
     {
-        var controllable = Displays.Where(d => d.SupportsBrightness).ToList();
-        if (controllable.Count == 0) return [];
+        if (Displays.Count == 0) return [];
 
         if (LinkAll)
         {
-            var lead = only is { SupportsBrightness: true } ? only : controllable.FirstOrDefault(d => d.IsPrimary) ?? controllable[0];
+            var lead = only ?? Displays.FirstOrDefault(d => d.IsPrimary) ?? Displays[0];
             lead.StepBrightness(delta); // raises BrightnessEdited, which moves the others
-            return controllable;
+            return Displays.ToList();
         }
 
-        var targets = only is null ? controllable : controllable.Where(d => d == only).ToList();
+        List<DisplayViewModel> targets = only is null ? [.. Displays] : [only];
         foreach (var display in targets) display.StepBrightness(delta);
         return targets;
     }
@@ -223,14 +222,13 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
         double level = source.Range.ToFraction((int)Math.Round(source.Brightness));
         foreach (var other in Displays)
         {
-            if (other != source && other.SupportsBrightness) other.ApplyLinkedLevel(level);
+            if (other != source) other.ApplyLinkedLevel(level);
         }
     }
 
     private void OnDisplayPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(DisplayViewModel.Brightness) or nameof(DisplayViewModel.SupportsBrightness))
-            OnPropertyChanged(nameof(Summary));
+        if (e.PropertyName == nameof(DisplayViewModel.Brightness)) OnPropertyChanged(nameof(Summary));
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) => ScheduleRedetect(DisplayChangeSettleTime);

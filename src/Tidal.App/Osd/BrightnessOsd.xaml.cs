@@ -37,14 +37,18 @@ public partial class BrightnessOsd : FluentWindow
         DpiChanged += (_, _) => { if (IsVisible) Reposition(RenderSize); };
     }
 
-    /// <summary>Shows (or updates) the level for the display at <paramref name="displayBounds"/>.</summary>
-    public void ShowLevel(ScreenRect displayBounds, int percent)
+    /// <summary>
+    /// Shows (or updates) the level for the display at <paramref name="displayBounds"/>. The bar
+    /// starts at <paramref name="minimum"/>, which is below zero when the display dims below zero.
+    /// </summary>
+    public void ShowLevel(ScreenRect displayBounds, int percent, int minimum)
     {
         _displayBounds = displayBounds;
-        percent = Math.Clamp(percent, 0, 100);
-        FillColumn.Width = new GridLength(percent, GridUnitType.Star);
+        minimum = Math.Min(minimum, 0);
+        percent = Math.Clamp(percent, minimum, 100);
+        FillColumn.Width = new GridLength(percent - minimum, GridUnitType.Star);
         RestColumn.Width = new GridLength(100 - percent, GridUnitType.Star);
-        LevelText.Text = percent.ToString();
+        LevelText.Text = percent.ToString(System.Globalization.CultureInfo.CurrentCulture);
 
         new WindowInteropHelper(this).EnsureHandle();
         var content = (FrameworkElement)Content;

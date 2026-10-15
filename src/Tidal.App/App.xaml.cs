@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Tidal.App.Osd;
 using Tidal.App.Services;
@@ -26,6 +27,7 @@ public partial class App : Application
     private SingleInstance? _singleInstance;
     private SettingsService? _settings;
     private DisplayListViewModel? _displays;
+    private DimmingService? _dimming;
     private AdaptiveViewModel? _adaptive;
     private ShortcutsViewModel? _shortcuts;
     private AppViewModel? _app;
@@ -53,6 +55,7 @@ public partial class App : Application
         _settings = new SettingsService(new SettingsStore(SettingsStore.DefaultPath));
         _displays = new DisplayListViewModel(_settings);
         _displays.PropertyChanged += OnDisplaysPropertyChanged;
+        _dimming = new DimmingService(_displays, OwnWindowsAboveDimming);
         _adaptive = new AdaptiveViewModel(_settings.Current.Adaptive, _displays, _settings.ScheduleSave);
 
         _hotkeys = new HotkeyManager();
@@ -83,6 +86,7 @@ public partial class App : Application
         _trayIcon?.Dispose();
         _popup?.AllowClose();
         _adaptive?.Dispose();
+        _dimming?.Dispose();
         _displays?.Dispose(); // flushes pending brightness writes
         _singleInstance?.Dispose();
         base.OnExit(e);
@@ -108,7 +112,17 @@ public partial class App : Application
     private void ShowLevel(DisplayViewModel display)
     {
         if (!_osds.TryGetValue(display.Id, out var osd)) _osds[display.Id] = osd = new BrightnessOsd();
-        osd.ShowLevel(display.Bounds, (int)Math.Round(display.Brightness));
+        osd.ShowLevel(display.Bounds, (int)Math.Round(display.Brightness), (int)display.SliderMinimum);
+    }
+
+    // Tidal's own always-on-top windows, which stay above the dimming overlays so they're readable.
+    private IEnumerable<IntPtr> OwnWindowsAboveDimming()
+    {
+        if (_popup is { IsVisible: true }) yield return new WindowInteropHelper(_popup).Handle;
+        foreach (var osd in _osds.Values)
+        {
+            if (osd.IsVisible) yield return new WindowInteropHelper(osd).Handle;
+        }
     }
 
     private void TogglePopup()
