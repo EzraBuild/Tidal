@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Tidal.App.Services;
 using Tidal.Core.Displays;
 
 namespace Tidal.App.ViewModels;
@@ -21,11 +22,15 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     private static readonly TimeSpan ResumeSettleTime = TimeSpan.FromSeconds(4);
 
     private readonly DisplayManager _manager = new();
+    private readonly SettingsService _settings;
     private readonly DispatcherTimer _redetectTimer;
     private bool _refreshRequestedWhileBusy;
 
-    public DisplayListViewModel()
+    public DisplayListViewModel(SettingsService settings)
     {
+        _settings = settings;
+        LinkAll = settings.Current.LinkAll;
+
         _redetectTimer = new DispatcherTimer { Interval = DisplayChangeSettleTime };
         _redetectTimer.Tick += async (_, _) =>
         {
@@ -52,9 +57,19 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _status = "Detecting displays…";
 
-    /// <summary>When on, moving one display's brightness moves every display to the same level.</summary>
+    /// <summary>
+    /// When on, moving one display's brightness moves the others to the same relative level within
+    /// their own limits (identical values when no limits are set).
+    /// </summary>
     [ObservableProperty]
     private bool _linkAll;
+
+    partial void OnLinkAllChanged(bool value)
+    {
+        if (_settings.Current.LinkAll == value) return;
+        _settings.Current.LinkAll = value;
+        _settings.ScheduleSave();
+    }
 
     /// <summary>Placeholder text when there are no displays to show, otherwise null.</summary>
     public string? EmptyMessage => Displays.Count > 0 ? null : IsBusy ? "Detecting displays…" : "No displays found";
@@ -95,6 +110,31 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     /// <summary>Re-reads current values from every display, e.g. when the popup opens.</summary>
     public Task RefreshValuesAsync() => Task.WhenAll(Displays.Select(d => d.RefreshAsync()));
 
+    /// <summary>
+    /// Applies one brightness hotkey press to every display, or only to <paramref name="only"/>.
+    /// With "link all" on, one display leads and the rest follow it. Returns the displays whose
+    /// level should be shown on screen.
+    /// </summary>
+    public IReadOnlyList<DisplayViewModel> StepBrightness(int delta, DisplayViewModel? only)
+    {
+        var controllable = Displays.Where(d => d.SupportsBrightness).ToList();
+        if (controllable.Count == 0) return [];
+
+        if (LinkAll)
+        {
+            var lead = only is { SupportsBrightness: true } ? only : controllable.FirstOrDefault(d => d.IsPrimary) ?? controllable[0];
+            lead.StepBrightness(delta); // raises BrightnessEdited, which moves the others
+            return controllable;
+        }
+
+        var targets = only is null ? controllable : controllable.Where(d => d == only).ToList();
+        foreach (var display in targets) display.StepBrightness(delta);
+        return targets;
+    }
+
+    /// <summary>The display containing the given screen point (physical pixels), if any.</summary>
+    public DisplayViewModel? FindDisplayAt(int x, int y) => Displays.FirstOrDefault(d => d.Contains(x, y));
+
     private async Task DetectAsync()
     {
         Status = "Detecting displays…";
@@ -107,7 +147,7 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
             var displays = await _manager.RefreshAsync();
             foreach (var display in displays)
             {
-                var viewModel = new DisplayViewModel(display);
+                var viewModel = new DisplayViewModel(display, _settings.Current.GetDisplay(display.Id), _settings.ScheduleSave);
                 Track(viewModel);
                 Displays.Add(viewModel);
             }
@@ -137,9 +177,10 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     private void OnBrightnessEdited(object? sender, EventArgs e)
     {
         if (!LinkAll || sender is not DisplayViewModel source) return;
+        double level = source.Range.ToFraction((int)Math.Round(source.Brightness));
         foreach (var other in Displays)
         {
-            if (other != source && other.SupportsBrightness) other.ApplyLinkedBrightness(source.Brightness);
+            if (other != source && other.SupportsBrightness) other.ApplyLinkedLevel(level);
         }
     }
 

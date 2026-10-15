@@ -3,25 +3,33 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
+using Tidal.App.Osd;
+using Tidal.App.Services;
 using Tidal.App.Tray;
 using Tidal.App.ViewModels;
+using Tidal.Core.Settings;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
+using static Tidal.App.Interop.NativeMethods;
 using MenuItem = System.Windows.Controls.MenuItem;
 
 namespace Tidal.App;
 
 /// <summary>
-/// Tidal lives in the notification area: no window at startup, a popup from the tray icon, and a
-/// menu on right-click. Runs until "Quit Tidal".
+/// Tidal lives in the notification area: no window at startup, a popup from the tray icon, a menu
+/// on right-click and global brightness shortcuts. Runs until "Quit Tidal".
 /// </summary>
 public partial class App : Application
 {
+    private readonly Dictionary<string, BrightnessOsd> _osds = [];
     private SingleInstance? _singleInstance;
+    private SettingsService? _settings;
     private DisplayListViewModel? _displays;
+    private ShortcutsViewModel? _shortcuts;
+    private HotkeyManager? _hotkeys;
     private TrayIcon? _trayIcon;
     private TrayPopup? _popup;
-    private DisplaysWindow? _displaysWindow;
+    private SettingsWindow? _settingsWindow;
     private bool _toolTipUpdatePending;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -37,15 +45,20 @@ public partial class App : Application
 
         ApplicationThemeManager.ApplySystemTheme();
 
-        _displays = new DisplayListViewModel();
+        _settings = new SettingsService(new SettingsStore(SettingsStore.DefaultPath));
+        _displays = new DisplayListViewModel(_settings);
         _displays.PropertyChanged += OnDisplaysPropertyChanged;
 
         _popup = new TrayPopup(_displays);
-        _popup.DisplaysWindowRequested += (_, _) => OpenDisplaysWindow();
+        _popup.SettingsRequested += (_, _) => OpenSettings();
 
         _trayIcon = new TrayIcon("Tidal");
         _trayIcon.Selected += (_, _) => TogglePopup();
         _trayIcon.ContextMenuRequested += (_, _) => ShowTrayMenu();
+
+        _hotkeys = new HotkeyManager();
+        _hotkeys.Pressed += OnHotkeyPressed;
+        _shortcuts = new ShortcutsViewModel(_settings.Current.Hotkeys, _hotkeys, _settings.ScheduleSave);
 
         _singleInstance.ListenForActivation(() => Dispatcher.InvokeAsync(ShowPopup));
 
@@ -57,11 +70,36 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _settings?.SaveNow();
+        _hotkeys?.Dispose();
         _trayIcon?.Dispose();
         _popup?.AllowClose();
         _displays?.Dispose(); // flushes pending brightness writes
         _singleInstance?.Dispose();
         base.OnExit(e);
+    }
+
+    private void OnHotkeyPressed(object? sender, int id)
+    {
+        if (_displays is null || _settings is null) return;
+        var hotkeys = _settings.Current.Hotkeys;
+        int delta = id == (int)HotkeyAction.BrightnessUp ? hotkeys.Step : -hotkeys.Step;
+
+        DisplayViewModel? only = null;
+        if (hotkeys.Target == HotkeyTarget.DisplayUnderPointer)
+        {
+            if (!GetCursorPos(out var pointer)) return;
+            only = _displays.FindDisplayAt(pointer.X, pointer.Y);
+            if (only is null) return;
+        }
+
+        foreach (var display in _displays.StepBrightness(delta, only)) ShowLevel(display);
+    }
+
+    private void ShowLevel(DisplayViewModel display)
+    {
+        if (!_osds.TryGetValue(display.Id, out var osd)) _osds[display.Id] = osd = new BrightnessOsd();
+        osd.ShowLevel(display.Bounds, (int)Math.Round(display.Brightness));
     }
 
     private void TogglePopup()
@@ -73,17 +111,17 @@ public partial class App : Application
 
     private void ShowPopup() => _popup?.ShowNear(_trayIcon?.GetBounds());
 
-    private void OpenDisplaysWindow()
+    private void OpenSettings()
     {
         _popup?.HidePopup();
-        if (_displaysWindow is null)
+        if (_settingsWindow is null)
         {
-            _displaysWindow = new DisplaysWindow(_displays!);
-            _displaysWindow.Closed += (_, _) => _displaysWindow = null;
+            _settingsWindow = new SettingsWindow(new SettingsViewModel(_displays!, _shortcuts!));
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         }
-        _displaysWindow.Show();
-        if (_displaysWindow.WindowState == WindowState.Minimized) _displaysWindow.WindowState = WindowState.Normal;
-        _displaysWindow.Activate();
+        _settingsWindow.Show();
+        if (_settingsWindow.WindowState == WindowState.Minimized) _settingsWindow.WindowState = WindowState.Normal;
+        _settingsWindow.Activate();
     }
 
     private void ShowTrayMenu()
@@ -91,7 +129,7 @@ public partial class App : Application
         _popup?.HidePopup();
         var menu = new ContextMenu { Placement = PlacementMode.MousePoint };
         menu.Items.Add(CreateMenuItem("Brightness", SymbolRegular.BrightnessHigh20, ShowPopup));
-        menu.Items.Add(CreateMenuItem("Displays…", SymbolRegular.Desktop20, OpenDisplaysWindow));
+        menu.Items.Add(CreateMenuItem("Settings…", SymbolRegular.Settings20, OpenSettings));
         menu.Items.Add(CreateMenuItem("Detect displays again", SymbolRegular.ArrowClockwise20, () => _ = _displays?.RefreshAsync()));
         menu.Items.Add(new Separator());
         menu.Items.Add(CreateMenuItem("Quit Tidal", SymbolRegular.Power20, () => Shutdown()));

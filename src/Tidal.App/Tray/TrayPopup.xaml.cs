@@ -47,8 +47,8 @@ public partial class TrayPopup : FluentWindow
         DpiChanged += (_, _) => { if (_isOpen) Reposition(RenderSize); };
     }
 
-    /// <summary>The user asked for the full Displays window.</summary>
-    public event EventHandler? DisplaysWindowRequested;
+    /// <summary>The user asked for the Settings window.</summary>
+    public event EventHandler? SettingsRequested;
 
     public bool IsOpen => _isOpen;
 
@@ -105,7 +105,7 @@ public partial class TrayPopup : FluentWindow
         base.OnPreviewKeyDown(e);
     }
 
-    private void OnDisplaysClick(object sender, RoutedEventArgs e) => DisplaysWindowRequested?.Invoke(this, EventArgs.Empty);
+    private void OnSettingsClick(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>Moves the popup into place for a window of <paramref name="size"/> (in DIPs).</summary>
     private void Reposition(Size size)

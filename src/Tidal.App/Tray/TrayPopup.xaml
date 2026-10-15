@@ -68,6 +68,7 @@
                                 <Slider Grid.Column="1" Minimum="0" Maximum="100" VerticalAlignment="Center"
                                         IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="10"
                                         behaviors:SliderWheel.Step="2"
+                                        ToolTip="{Binding LimitsDescription}"
                                         AutomationProperties.Name="{Binding Name, StringFormat={}{0} brightness}"
                                         Value="{Binding Brightness}" />
                                 <TextBlock Grid.Column="2" Text="{Binding Brightness, StringFormat={}{0:0}}"
@@ -100,9 +101,9 @@
                                AutomationProperties.Name="Detect displays again" />
                     <ui:Button Appearance="Transparent" Padding="8" BorderThickness="0"
                                Icon="{ui:SymbolIcon Settings20}"
-                               Click="OnDisplaysClick"
-                               ToolTip="Display details"
-                               AutomationProperties.Name="Display details" />
+                               Click="OnSettingsClick"
+                               ToolTip="Settings"
+                               AutomationProperties.Name="Settings" />
                 </StackPanel>
             </Grid>
         </Border>
