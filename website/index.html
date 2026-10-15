@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tidal — brightness control for every monitor on Windows</title>
+  <meta name="description" content="Tidal is a free Windows tray app that changes the real brightness of your external monitors: sliders, keyboard shortcuts, and brightness that follows the sun.">
+  <meta name="theme-color" content="#0b1422">
+  <meta property="og:title" content="Tidal — every screen, just right">
+  <meta property="og:description" content="Real hardware brightness for your external monitors, right from the Windows tray.">
+  <meta property="og:image" content="https://tidal-lemon.vercel.app/icon-512.png">
+  <meta property="og:url" content="https://tidal-lemon.vercel.app/">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="/"><img src="favicon.png" alt="" width="28" height="28"><span>Tidal</span></a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/EzraBuild/Tidal">GitHub</a>
+      <a class="btn btn-small" href="#download">Download</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Free for Windows 10 &amp; 11</p>
+        <h1>Every screen,<br><span class="sun">just right.</span></h1>
+        <p class="lede">Tidal changes the <em>real</em> brightness of your external monitors, right from the tray.
+          Sliders, keyboard shortcuts, and brightness that follows the sun — no more digging through monitor buttons.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/EzraBuild/Tidal/releases/latest/download/Tidal-win-Setup.exe">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+            Download for Windows
+          </a>
+          <a class="btn btn-ghost" href="#features">See what it does</a>
+        </div>
+        <p class="fineprint">Version 0.1 preview · 64-bit · No admin rights needed</p>
+      </div>
+      <div class="hero-visual">
+        <div class="glow"></div>
+        <img class="shot shot-popup" src="screens/popup.png" width="380" height="348"
+             alt="Tidal's tray popup: a brightness slider for each display, an input switcher, presets and Link all">
+      </div>
+      <svg class="waves" viewBox="0 0 1440 140" preserveAspectRatio="none" aria-hidden="true">
+        <path class="wave-back" d="M0,70 C240,20 420,30 640,66 C860,102 1100,110 1440,52 L1440,140 L0,140 Z"/>
+        <path class="wave-front" d="M0,100 C260,70 460,128 760,96 C1040,66 1220,74 1440,98 L1440,140 L0,140 Z"/>
+      </svg>
+    </section>
+
+    <section id="features" class="features">
+      <h2>Everything your monitor's buttons<br class="wide-only"> should have been</h2>
+      <div class="grid">
+        <article class="card">
+          <svg class="icon sun-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <h3>Real hardware brightness</h3>
+          <p>Talks to your monitors over DDC/CI — the same channel as their own buttons — so it's the backlight that changes, not a dimmed picture. Laptop screens work too.</p>
+        </article>
+        <article class="card">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M5 18a7 7 0 0114 0M12 4v3M4.2 9.2l2 1.3M19.8 9.2l-2 1.3"/></svg>
+          <h3>Follows your day</h3>
+          <p>Dim at night and bright at midday, worked out from your location. Or let your external screens match the laptop's brightness, or a light sensor.</p>
+        </article>
+        <article class="card">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h1m3 0h1m3 0h1m3 0h1M7 14h10"/></svg>
+          <h3>Keyboard shortcuts</h3>
+          <p>Brighter and dimmer from any app (Ctrl+Alt+PageUp / PageDown by default), with a small on-screen level on each display.</p>
+        </article>
+        <article class="card">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>
+          <h3>Link all, with limits</h3>
+          <p>Move every screen together, each within its own lowest and highest brightness — so a bright monitor and a dim laptop stay in step.</p>
+        </article>
+        <article class="card">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v4m6-4v4M7 7h10v4a5 5 0 01-10 0V7zm5 9v5"/></svg>
+          <h3>Inputs and volume</h3>
+          <p>Switch a monitor between DisplayPort, HDMI and USB-C, and set its speaker volume, when the monitor supports it.</p>
+        </article>
+        <article class="card">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <h3>Made for Windows 11</h3>
+          <p>Lives in the tray, with Mica and Acrylic, rounded corners, and light and dark mode — and tells you plainly when a display can't be controlled.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="showcase">
+      <div class="row">
+        <img class="shot" src="screens/settings-display.png" width="940" height="740" loading="lazy"
+             alt="Tidal Settings for a monitor: lowest, current and highest brightness as big numbers around a drawing of the monitor">
+        <div class="copy">
+          <p class="eyebrow">One page per display</p>
+          <h2>See it, then set it</h2>
+          <p>Each monitor gets its own page: big numbers for its lowest, current and highest brightness that you can scroll or type,
+            contrast, its input, and whether it follows adaptive brightness.</p>
+        </div>
+      </div>
+      <div class="row reverse">
+        <img class="shot" src="screens/settings-adaptive.png" width="940" height="740" loading="lazy"
+             alt="Tidal's adaptive brightness page: four modes and a chart of today's brightness following the sun">
+        <div class="copy">
+          <p class="eyebrow">Adaptive brightness</p>
+          <h2>Brightness that follows the sun</h2>
+          <p>Pick what your screens follow and see today's curve from sunrise to sunset. Nudge a display yourself and Tidal keeps
+            your adjustment on top instead of fighting you.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="download">
+      <div class="download-card">
+        <img src="icon-512.png" alt="" width="88" height="88">
+        <h2>Get Tidal</h2>
+        <p class="version">Version 0.1 · preview</p>
+        <div class="cta center">
+          <a class="btn btn-primary" href="https://github.com/EzraBuild/Tidal/releases/latest/download/Tidal-win-Setup.exe">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+            Download installer
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/EzraBuild/Tidal/releases/latest/download/Tidal-win-Portable.zip">Portable .zip</a>
+        </div>
+        <ul class="reqs">
+          <li>Windows 10 (version 2004 or later) or Windows 11, 64-bit</li>
+          <li>Installs just for you — no admin rights, no account</li>
+          <li>External monitors need DDC/CI, which most have (it's usually on in the monitor's menu)</li>
+        </ul>
+        <p class="note">Windows may say <q>Windows protected your PC</q>: this preview isn't code-signed yet.
+          Click <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
+        <p class="next"><strong>Coming next:</strong> software dimming below 0% and for monitors without DDC/CI, per-app presets, and start with Windows.</p>
+      </div>
+    </section>
+
+    <section id="faq" class="faq">
+      <h2>Questions</h2>
+      <details>
+        <summary>Will it work with my monitor?</summary>
+        <p>Most external monitors from the last decade support DDC/CI, the standard Tidal uses. If one doesn't respond, turn on
+          DDC/CI in the monitor's on-screen menu, or connect it directly instead of through a dock, KVM switch or adapter.
+          Wireless and DisplayLink displays can't be controlled this way. Laptop screens use Windows' own brightness control.
+          Tidal tells you which method each display uses, and why when one can't be controlled.</p>
+      </details>
+      <details>
+        <summary>Why does Windows warn me when I open it?</summary>
+        <p>Windows SmartScreen warns about apps that aren't code-signed and aren't yet widely downloaded. This preview isn't signed
+          yet. Click <strong>More info</strong> and then <strong>Run anyway</strong>.</p>
+      </details>
+      <details>
+        <summary>Does Tidal use my location?</summary>
+        <p>Only if you choose <em>Follow the sun</em> and press the location button; you can also type coordinates. The location is
+          rounded to about a kilometre, stays on your PC, and sunrise and sunset are calculated offline.</p>
+      </details>
+      <details>
+        <summary>Does it collect any data?</summary>
+        <p>No. There's no account, no analytics and no telemetry. Settings are saved in a file on your PC.</p>
+      </details>
+      <details>
+        <summary>How do I open it, and how do I uninstall it?</summary>
+        <p>Tidal lives in the notification area — on Windows 11, click the <strong>^</strong> arrow next to the clock and drag its
+          icon onto the taskbar to keep it handy. To remove it: Settings › Apps › Installed apps › Tidal › Uninstall.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 Tidal</span>
+    <a href="https://github.com/EzraBuild/Tidal">Source on GitHub</a>
+    <a href="https://github.com/EzraBuild/Tidal/issues">Report a problem</a>
+  </footer>
+</body>
+</html>

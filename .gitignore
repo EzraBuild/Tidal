@@ -488,3 +488,6 @@ $RECYCLE.BIN/
 # Tidal
 *.log
 
+
+# Vercel project link (local)
+.vercel/
