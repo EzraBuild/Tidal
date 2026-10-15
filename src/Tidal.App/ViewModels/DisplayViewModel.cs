@@ -19,7 +19,10 @@ public sealed partial class DisplayViewModel : ObservableObject
     private readonly Action _settingsChanged;
     private bool _loadingFromDisplay;
     private bool _suppressEditEvent;
+    private bool _applyingAdaptive;
     private long _lastEdit;
+    // The adaptive level this display is following, or null when adaptive brightness isn't driving it.
+    private double? _adaptiveLevel;
 
     public DisplayViewModel(Display display, DisplaySettings settings, Action settingsChanged)
     {
@@ -36,6 +39,7 @@ public sealed partial class DisplayViewModel : ObservableObject
     public string Id => _display.Id;
     public string Name => _display.Name;
     public bool IsPrimary => _display.Info.IsPrimary;
+    public bool IsInternal => _display.Info.IsInternal;
     public ScreenRect Bounds => _display.Info.Bounds;
     public SymbolRegular Icon => _display.Info.IsInternal ? SymbolRegular.Laptop24 : SymbolRegular.Desktop24;
 
@@ -94,6 +98,31 @@ public sealed partial class DisplayViewModel : ObservableObject
     /// <summary>Tooltip text when the limits narrow the slider, otherwise null.</summary>
     public string? LimitsDescription => Range.IsFull ? null : $"Limited to {Range}";
 
+    /// <summary>Follow adaptive brightness. By default external displays do and the built-in screen doesn't.</summary>
+    public bool IsAdaptive
+    {
+        get => _settings.Adaptive ?? !IsInternal;
+        set
+        {
+            if (value == IsAdaptive) return;
+            _settings.Adaptive = value;
+            _settings.AdaptiveOffset = 0;
+            if (!value) _adaptiveLevel = null;
+            _settingsChanged();
+            OnPropertyChanged();
+            OnAdaptiveOffsetChanged();
+            AdaptiveToggled?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>Raised when <see cref="IsAdaptive"/> changes, so the current level can be applied straight away.</summary>
+    public event EventHandler? AdaptiveToggled;
+
+    /// <summary>"+12% from adaptive" while the user's adjustment is in effect, otherwise null.</summary>
+    public string? AdaptiveOffsetText => HasAdaptiveOffset ? $"{_settings.AdaptiveOffset * 100:+0;-0}% from adaptive" : null;
+
+    public bool HasAdaptiveOffset => _adaptiveLevel is not null && Math.Abs(_settings.AdaptiveOffset) >= 0.005;
+
     partial void OnBrightnessChanged(double value)
     {
         if (_loadingFromDisplay || !SupportsBrightness) return;
@@ -108,6 +137,16 @@ public sealed partial class DisplayViewModel : ObservableObject
 
         _lastEdit = Stopwatch.GetTimestamp();
         _display.SetBrightness(percent);
+
+        // Any change that didn't come from adaptive brightness (slider, hotkey, Link all, a new
+        // limit) becomes the user's offset, so the next adaptive update keeps it.
+        if (!_applyingAdaptive && _adaptiveLevel is double adaptive)
+        {
+            _settings.AdaptiveOffset = Math.Clamp(Range.ToFraction(percent) - adaptive, -1, 1);
+            _settingsChanged();
+            OnAdaptiveOffsetChanged();
+        }
+
         if (!_suppressEditEvent) BrightnessEdited?.Invoke(this, EventArgs.Empty);
     }
 
@@ -130,6 +169,52 @@ public sealed partial class DisplayViewModel : ObservableObject
     /// display's own limits, without echoing the edit.
     /// </summary>
     public void ApplyLinkedLevel(double fraction) => SetBrightnessQuietly(Range.FromFraction(fraction));
+
+    /// <summary>
+    /// Follows adaptive brightness: <paramref name="level"/> (0–1) plus the user's offset, scaled
+    /// into this display's limits.
+    /// </summary>
+    public void ApplyAdaptiveLevel(double level)
+    {
+        bool wasFollowing = _adaptiveLevel is not null;
+        _adaptiveLevel = level;
+        if (!wasFollowing) OnAdaptiveOffsetChanged();
+        if (!SupportsBrightness) return;
+
+        _applyingAdaptive = true;
+        try
+        {
+            SetBrightnessQuietly(Range.FromFraction(level + _settings.AdaptiveOffset));
+        }
+        finally
+        {
+            _applyingAdaptive = false;
+        }
+    }
+
+    /// <summary>Adaptive brightness stopped driving this display; manual changes no longer count as offsets.</summary>
+    public void StopAdaptive()
+    {
+        _adaptiveLevel = null;
+        OnAdaptiveOffsetChanged();
+    }
+
+    /// <summary>Drops the user's adjustment and goes back to the plain adaptive level.</summary>
+    [RelayCommand]
+    public void ResetAdaptiveOffset()
+    {
+        if (_settings.AdaptiveOffset == 0) return;
+        _settings.AdaptiveOffset = 0;
+        _settingsChanged();
+        OnAdaptiveOffsetChanged();
+        if (_adaptiveLevel is double level) ApplyAdaptiveLevel(level);
+    }
+
+    private void OnAdaptiveOffsetChanged()
+    {
+        OnPropertyChanged(nameof(AdaptiveOffsetText));
+        OnPropertyChanged(nameof(HasAdaptiveOffset));
+    }
 
     public bool Contains(int x, int y) => x >= Bounds.Left && x < Bounds.Right && y >= Bounds.Top && y < Bounds.Bottom;
 

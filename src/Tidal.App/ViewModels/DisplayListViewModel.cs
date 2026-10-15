@@ -135,6 +135,34 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     /// <summary>The display containing the given screen point (physical pixels), if any.</summary>
     public DisplayViewModel? FindDisplayAt(int x, int y) => Displays.FirstOrDefault(d => d.Contains(x, y));
 
+    /// <summary>A display's "Adaptive" switch was turned on or off.</summary>
+    public event EventHandler? AdaptiveToggled;
+
+    /// <summary>
+    /// Moves every adaptive display to <paramref name="level"/> (0–1) within its limits. The built-in
+    /// screen is skipped when it is the source being followed.
+    /// </summary>
+    public void ApplyAdaptiveLevel(double level, bool skipBuiltIn)
+    {
+        foreach (var display in Displays)
+        {
+            if (!display.IsAdaptive || (skipBuiltIn && display.IsInternal)) display.StopAdaptive();
+            else display.ApplyAdaptiveLevel(level);
+        }
+    }
+
+    /// <summary>Adaptive brightness is off: displays only change when the user changes them.</summary>
+    public void StopAdaptive()
+    {
+        foreach (var display in Displays) display.StopAdaptive();
+    }
+
+    /// <summary>Clears every display's adjustment, e.g. when switching to a different adaptive mode.</summary>
+    public void ResetAdaptiveOffsets()
+    {
+        foreach (var display in Displays) display.ResetAdaptiveOffset();
+    }
+
     private async Task DetectAsync()
     {
         Status = "Detecting displays…";
@@ -165,14 +193,18 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     {
         display.BrightnessEdited += OnBrightnessEdited;
         display.PropertyChanged += OnDisplayPropertyChanged;
+        display.AdaptiveToggled += OnAdaptiveToggled;
     }
 
     private void Untrack(DisplayViewModel display)
     {
         display.BrightnessEdited -= OnBrightnessEdited;
         display.PropertyChanged -= OnDisplayPropertyChanged;
+        display.AdaptiveToggled -= OnAdaptiveToggled;
         display.Detach();
     }
+
+    private void OnAdaptiveToggled(object? sender, EventArgs e) => AdaptiveToggled?.Invoke(sender, e);
 
     private void OnBrightnessEdited(object? sender, EventArgs e)
     {
