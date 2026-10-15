@@ -20,7 +20,7 @@ warn on first run: choose **More info → Run anyway**.
 | 3 | Global hotkeys with per-monitor min/max | Done |
 | 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Done |
 | 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Done |
-| 6 | Software dimming below 0% / for monitors without DDC/CI | Planned |
+| 6 | Software dimming below 0% / for monitors without DDC/CI | Done |
 | 7 | Per-app presets | Planned |
 | 8 | JSON settings, start with Windows | Planned |
 
@@ -39,12 +39,12 @@ src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, squa
   Osd/                 On-screen brightness indicator for shortcuts
   Themes/              Tidal's palette (light/dark) and control styles: pill slider, chips, tabs, tiles
   Controls/            Shortcut recorder, number dial, day curve chart, mode picker
-  Services/            Global hotkeys, settings persistence
+  Services/            Global hotkeys, settings persistence, software dimming overlays
   ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
-  Interop/             Win32 for the tray icon, popup placement and hotkeys
+  Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
 tools/Tidal.Diag       Console diagnostics: what each display supports
-tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits,
-                       shortcuts, settings store, sun times, adaptive curves
+tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits and
+                       dimming below 0, shortcuts, settings store, sun times, adaptive curves
 ```
 
 ### How detection works
@@ -60,7 +60,16 @@ tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, intero
 
 Each display becomes a `DdcDisplay`, `WmiDisplay` or `UncontrolledDisplay`. Displays without
 hardware control expose a `Note` explaining why (DDC/CI off in the monitor menu, dock or adapter in
-the way, wireless connection and so on).
+the way, wireless connection and so on), and Tidal dims them in software instead.
+
+### Software dimming
+
+Software dimming lays a black, see-through window over a display (`DimOverlay`): clicks pass
+through it, it never takes focus, and it's excluded from screenshots and screen sharing. It's a
+plain Win32 layered window with a constant alpha, so it costs nothing to draw, and it disappears
+with the process, so a crash can't leave a screen dark. At most it's 70% black
+(`SoftwareDimming.MaxOpacity`). `DimmingService` keeps it above other always-on-top windows (the
+taskbar rises over it when clicked) while Tidal's popup and level indicator stay above it.
 
 ### Throttling
 
@@ -92,6 +101,11 @@ drag it onto the taskbar to keep it visible).
   can change every display or only the one under the mouse pointer.
 - **Limits**: each display can have a lowest and highest brightness. Sliders, shortcuts and Link all
   stay inside them; "brighter" never dims a display that was set above its limit by other means.
+- **Dim below 0**: a per-display switch in Settings. The slider and shortcuts then go past the
+  lowest brightness to -50, keeping the backlight at its lowest and darkening the picture in
+  software. Shortcuts pause at the lowest brightness on the way down. Displays Tidal can't control
+  (no DDC/CI) get a brightness slider that is software dimming all the way. Software dimming saves
+  no power, and the Windows Start menu and other system flyouts aren't dimmed.
 - **Adaptive brightness** moves displays automatically. Pick one source in Settings:
   - *Follow the sun*: dim at night, brightest at the day's highest sun, computed locally from your
     location (type it, or let Windows fill it in).
@@ -102,8 +116,8 @@ drag it onto the taskbar to keep it visible).
   Each display has its own Adaptive switch (on for external displays by default) and follows the
   level within its limits, so limits double as calibration. Changing a display yourself while
   adaptive is on keeps your change as an offset; Settings shows it with a Reset button.
-- **Right-click the icon** for Settings (contrast, limits, adaptive brightness, shortcuts, why a
-  display can't be controlled), detecting displays again, and Quit.
+- **Right-click the icon** for Settings (contrast, limits, adaptive brightness, dimming below 0,
+  shortcuts, why a display can't be controlled), detecting displays again, and Quit.
 - Hovering the icon shows each display's brightness.
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
