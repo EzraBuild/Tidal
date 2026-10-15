@@ -1,8 +1,15 @@
 # Tidal
 
 A Windows tray app for controlling external monitors: hardware brightness and contrast over DDC/CI,
-the built-in laptop screen through WMI, and (planned) adaptive brightness, hotkeys, input switching
-and software dimming. Inspired by Lunar for macOS; written from scratch.
+the built-in laptop screen through WMI, adaptive brightness, hotkeys, and input switching.
+Inspired by Lunar for macOS; written from scratch.
+
+## Download
+
+**[tidal-lemon.vercel.app](https://tidal-lemon.vercel.app)**, or grab `Tidal-win-Setup.exe` from the
+[latest release](https://github.com/EzraBuild/Tidal/releases/latest). It installs per user (no admin
+rights) on 64-bit Windows 10 (2004+) and 11. The preview isn't code-signed yet, so SmartScreen may
+warn on first run: choose **More info → Run anyway**.
 
 ## Status
 
@@ -101,8 +108,8 @@ drag it onto the taskbar to keep it visible).
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
 
-Settings are saved to `%LOCALAPPDATA%\Tidal\settings.json` (readable JSON; an unreadable file is
-kept as `settings.json.bad` and defaults are used).
+Settings are saved to `%APPDATA%\Tidal\settings.json` (readable JSON; an unreadable file is kept
+as `settings.json.bad` and defaults are used). The app itself installs to `%LOCALAPPDATA%\Tidal`.
 
 ## Build and run
 
@@ -119,3 +126,16 @@ dotnet run --project tools/Tidal.Diag -- --set 2 70     # set display 2 to 70%
 dotnet run --project tools/Tidal.Diag -- --watch-builtin 30   # print built-in brightness changes
 dotnet run --project tools/Tidal.Diag -- --set-input 1 11     # switch display 1 to HDMI 1 (careful!)
 ```
+
+## Releasing
+
+1. Bump `<Version>` in `Directory.Build.props`.
+2. `powershell -ExecutionPolicy Bypass -File build\release.ps1` runs the tests, publishes a
+   self-contained 64-bit build and packs it with [Velopack](https://velopack.io) into
+   `artifacts\releases` (`Tidal-win-Setup.exe`, `Tidal-win-Portable.zip`, and update feed files).
+3. Create a GitHub release tagged `vX.Y.Z` and upload **every** file from `artifacts\releases`.
+   The website's buttons link to `releases/latest/download/Tidal-win-Setup.exe`, so they pick up
+   the new version automatically.
+
+The website is the static page in `website/`, deployed to Vercel (`npx vercel deploy --prod`
+from that folder). `build\make-icon.ps1` regenerates the app and website icons.
