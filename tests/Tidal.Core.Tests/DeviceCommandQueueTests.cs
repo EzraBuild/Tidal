@@ -90,6 +90,21 @@ public class DeviceCommandQueueTests
     }
 
     [Fact]
+    public async Task Dispose_while_the_queue_waits_out_the_gap_does_not_crash()
+    {
+        // Regression: the worker would dequeue from an empty list after Dispose dropped the only
+        // pending read while the worker was sleeping between commands, crashing the process.
+        var queue = new DeviceCommandQueue("test", TimeSpan.FromMilliseconds(300));
+        await queue.RunAsync(() => 0).WaitAsync(Timeout); // the next command now has to wait ~300 ms
+        var read = queue.RunAsync(() => 1);                // the worker is now sleeping out the gap
+        await Task.Delay(60);
+
+        queue.Dispose(); // drops the read mid-sleep, then waits for the worker to finish
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read.WaitAsync(Timeout));
+    }
+
+    [Fact]
     public async Task Dispose_flushes_pending_writes_and_cancels_pending_reads()
     {
         var queue = new DeviceCommandQueue("test", TimeSpan.Zero);

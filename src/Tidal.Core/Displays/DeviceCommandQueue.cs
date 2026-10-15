@@ -106,6 +106,8 @@ public sealed class DeviceCommandQueue : IDisposable
             Command command;
             lock (_gate)
             {
+                // Dispose drops pending reads, possibly while we were waiting out the gap.
+                if (_pending.Count == 0) continue;
                 command = _pending[0];
                 _pending.RemoveAt(0);
             }
