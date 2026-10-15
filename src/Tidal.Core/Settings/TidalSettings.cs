@@ -43,13 +43,23 @@ public sealed class TidalSettings
             }
             var range = display.BrightnessRange;
             (display.MinBrightness, display.MaxBrightness) = (range.Min, range.Max);
-            display.AdaptiveOffset = double.IsNaN(display.AdaptiveOffset) ? 0 : Math.Clamp(display.AdaptiveOffset, -1, 1);
+            display.AdaptiveOffset = double.IsNaN(display.AdaptiveOffset)
+                ? 0
+                : Math.Clamp(display.AdaptiveOffset, -DisplaySettings.MaxAdaptiveOffset, DisplaySettings.MaxAdaptiveOffset);
+            display.BelowZeroLevel = Math.Clamp(display.BelowZeroLevel, 0, BrightnessRange.BelowZeroDepth);
+            if (display.SoftwareBrightness is int software) display.SoftwareBrightness = Math.Clamp(software, 0, 100);
         }
     }
 }
 
 public sealed class DisplaySettings
 {
+    /// <summary>
+    /// Largest adjustment on top of adaptive brightness, as a fraction of the range. Beyond 1 so an
+    /// adjustment from the top of the range can reach the bottom of software dimming.
+    /// </summary>
+    public const double MaxAdaptiveOffset = 2;
+
     public int MinBrightness { get; set; }
     public int MaxBrightness { get; set; } = 100;
 
@@ -61,6 +71,18 @@ public sealed class DisplaySettings
     /// (e.g. 0.1 = ten percent of the way further towards its maximum).
     /// </summary>
     public double AdaptiveOffset { get; set; }
+
+    /// <summary>Keep dimming in software after the hardware reaches its lowest brightness.</summary>
+    public bool DimBelowZero { get; set; }
+
+    /// <summary>
+    /// How far below zero the display is dimmed (0 to <see cref="BrightnessRange.BelowZeroDepth"/>),
+    /// kept so the dimming survives a restart or the displays being detected again.
+    /// </summary>
+    public int BelowZeroLevel { get; set; }
+
+    /// <summary>Brightness of a display Tidal can only dim in software (0–100); null means not dimmed.</summary>
+    public int? SoftwareBrightness { get; set; }
 
     [JsonIgnore]
     public BrightnessRange BrightnessRange => new(MinBrightness, MaxBrightness);

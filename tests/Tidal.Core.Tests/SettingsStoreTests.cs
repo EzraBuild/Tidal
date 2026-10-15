@@ -62,14 +62,21 @@ public sealed class SettingsStoreTests : IDisposable
             {
               // comments and trailing commas are tolerated
               "Hotkeys": null,
-              "Displays": { "a": { "MinBrightness": 90, "MaxBrightness": 10 }, "b": null, },
+              "Displays": {
+                "a": { "MinBrightness": 90, "MaxBrightness": 10, "BelowZeroLevel": 400, "SoftwareBrightness": -3, "AdaptiveOffset": -9 },
+                "b": null,
+              },
             }
             """);
 
         var settings = new SettingsStore(FilePath).Load();
 
         Assert.NotNull(settings.Hotkeys);
-        Assert.Equal((10, 90), (settings.Displays["a"].MinBrightness, settings.Displays["a"].MaxBrightness));
+        var a = settings.Displays["a"];
+        Assert.Equal((10, 90), (a.MinBrightness, a.MaxBrightness));
+        Assert.Equal(50, a.BelowZeroLevel);
+        Assert.Equal(0, a.SoftwareBrightness);
+        Assert.Equal(-2, a.AdaptiveOffset);
         Assert.False(settings.Displays.ContainsKey("b"));
     }
 
