@@ -49,6 +49,7 @@ public partial class App : Application
         ApplicationThemeManager.ApplySystemTheme();
         TidalTheme.Initialize();
 
+        SettingsStore.MoveLegacyFile(SettingsStore.LegacyPath, SettingsStore.DefaultPath);
         _settings = new SettingsService(new SettingsStore(SettingsStore.DefaultPath));
         _displays = new DisplayListViewModel(_settings);
         _displays.PropertyChanged += OnDisplaysPropertyChanged;

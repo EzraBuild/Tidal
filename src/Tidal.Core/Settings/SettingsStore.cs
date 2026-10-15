@@ -18,11 +18,39 @@ public sealed class SettingsStore(string filePath)
         Converters = { new JsonStringEnumConverter() },
     };
 
-    /// <summary>%LOCALAPPDATA%\Tidal\settings.json — local, since display IDs are specific to this PC.</summary>
+    /// <summary>
+    /// %APPDATA%\Tidal\settings.json. Not under %LOCALAPPDATA%\Tidal: the installer owns that folder,
+    /// replaces it on updates and deletes it on uninstall.
+    /// </summary>
     public static string DefaultPath { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tidal", "settings.json");
+
+    /// <summary>Where settings lived before installer support (v0.1 development builds).</summary>
+    public static string LegacyPath { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Tidal", "settings.json");
 
     public string FilePath { get; } = filePath;
+
+    /// <summary>
+    /// Moves a settings file from <paramref name="legacyPath"/> to <paramref name="currentPath"/>
+    /// unless one already exists there. Returns true if a file was moved.
+    /// </summary>
+    public static bool MoveLegacyFile(string legacyPath, string currentPath)
+    {
+        if (!File.Exists(legacyPath) || File.Exists(currentPath)) return false;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(currentPath)!);
+            File.Move(legacyPath, currentPath);
+            Log.Info($"Moved settings from {legacyPath} to {currentPath}");
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warning($"Couldn't move old settings file: {ex.Message}");
+            return false;
+        }
+    }
 
     /// <summary>
     /// Loads settings. A missing file gives defaults. A file that can't be read is copied aside to

@@ -82,6 +82,24 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(HotkeySettings.MaxStep, new SettingsStore(FilePath).Load().Hotkeys.Step);
     }
 
+    [Fact]
+    public void A_legacy_settings_file_is_moved_once()
+    {
+        string legacy = Path.Combine(_directory, "old", "settings.json");
+        string current = Path.Combine(_directory, "new", "settings.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(legacy)!);
+        File.WriteAllText(legacy, """{ "LinkAll": true }""");
+
+        Assert.True(SettingsStore.MoveLegacyFile(legacy, current));
+        Assert.False(File.Exists(legacy));
+        Assert.True(new SettingsStore(current).Load().LinkAll);
+
+        // A later run (or an existing new file) leaves things alone.
+        File.WriteAllText(legacy, "{}");
+        Assert.False(SettingsStore.MoveLegacyFile(legacy, current));
+        Assert.True(new SettingsStore(current).Load().LinkAll);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true);
