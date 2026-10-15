@@ -34,7 +34,7 @@ src/Tidal.Core         Hardware layer, no UI
                        light sensor sources
   Hotkeys/             Shortcut parsing and formatting
   Settings/            Settings model and JSON store
-src/Tidal.App          WPF tray app (WPF-UI for Windows 11 styling: Mica/Acrylic, rounded corners)
+src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, square, Geist fonts)
   Tray/                Notification-area icon, the brightness popup, the logo
   Osd/                 On-screen brightness indicator for shortcuts
   Themes/              Tidal's palette (light/dark) and control styles: pill slider, chips, tabs, tiles
@@ -129,7 +129,7 @@ dotnet run --project tools/Tidal.Diag -- --set-input 1 11     # switch display 1
 
 ## Releasing
 
-1. Bump `<Version>` in `Directory.Build.props`.
+1. Bump `<Version>` in `Directory.Build.props` (and `version` in `website/app/page.tsx`).
 2. `powershell -ExecutionPolicy Bypass -File build\release.ps1` runs the tests, publishes a
    self-contained 64-bit build and packs it with [Velopack](https://velopack.io) into
    `artifacts\releases` (`Tidal-win-Setup.exe`, `Tidal-win-Portable.zip`, and update feed files).
@@ -137,5 +137,5 @@ dotnet run --project tools/Tidal.Diag -- --set-input 1 11     # switch display 1
    The website's buttons link to `releases/latest/download/Tidal-win-Setup.exe`, so they pick up
    the new version automatically.
 
-The website is the static page in `website/`, deployed to Vercel (`npx vercel deploy --prod`
-from that folder). `build\make-icon.ps1` regenerates the app and website icons.
+The website is a Next.js app in `website/` (`npm install`, `npm run dev`), deployed to Vercel
+(`npx vercel deploy --prod` from that folder). `build\make-icon.ps1` regenerates the app and website icons.
