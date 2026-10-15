@@ -8,8 +8,8 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 
 | # | Feature | State |
 |---|---------|-------|
-| 1 | Detect monitors; read/write brightness and contrast (DDC/CI, WMI) | Done (test UI) |
-| 2 | Tray popup with per-monitor sliders and "link all" | Planned |
+| 1 | Detect monitors; read/write brightness and contrast (DDC/CI, WMI) | Done |
+| 2 | Tray popup with per-monitor sliders and "link all" | Done |
 | 3 | Global hotkeys with per-monitor min/max | Planned |
 | 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Planned |
 | 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Planned |
@@ -23,7 +23,10 @@ and software dimming. Inspired by Lunar for macOS; written from scratch.
 src/Tidal.Core         Hardware layer, no UI
   Native/              P/Invoke: user32 (monitor enumeration, CCD) and dxva2 (DDC/CI)
   Displays/            Display model, detection, DDC/CI + WMI backends, write throttling
-src/Tidal.App          WPF app (WPF-UI for Windows 11 styling: Mica, rounded corners)
+src/Tidal.App          WPF tray app (WPF-UI for Windows 11 styling: Mica/Acrylic, rounded corners)
+  Tray/                Notification-area icon, the brightness popup, the logo
+  ViewModels/          Display list shared by the popup and the Displays window ("link all" lives here)
+  Interop/             Win32 for the tray icon and popup placement
 tools/Tidal.Diag       Console diagnostics: what each display supports
 tests/Tidal.Core.Tests Unit tests for the throttling queue, capabilities parser and interop structs
 ```
@@ -52,6 +55,20 @@ All I/O for a display goes through its own `DeviceCommandQueue`, a dedicated thr
 - waits at least 50 ms between DDC/CI commands, and
 - retries reads and writes that fail; I2C errors happen now and then.
 
+## Using Tidal
+
+Tidal runs in the notification area (on Windows 11 it starts in the "Show hidden icons" flyout;
+drag it onto the taskbar to keep it visible).
+
+- **Click the icon** to open the brightness popup: one slider per display. The mouse wheel moves a
+  slider. Click elsewhere or press Esc to close.
+- **Link all** moves every display to the level of the slider you drag.
+- **Right-click the icon** for the Displays window (contrast, connection details, why a display
+  can't be controlled), detecting displays again, and Quit.
+- Hovering the icon shows each display's brightness.
+- Launching Tidal again opens the running instance's popup. `--background` starts it without
+  showing the popup.
+
 ## Build and run
 
 Requires the .NET 8 SDK on Windows 10/11.
@@ -59,7 +76,7 @@ Requires the .NET 8 SDK on Windows 10/11.
 ```powershell
 dotnet build
 dotnet test
-dotnet run --project src/Tidal.App            # test UI
+dotnet run --project src/Tidal.App            # tray app
 dotnet run --project tools/Tidal.Diag          # list displays and what Tidal can control
 dotnet run --project tools/Tidal.Diag -- --caps         # include DDC/CI capabilities (slow)
 dotnet run --project tools/Tidal.Diag -- --test-write   # change brightness briefly, verify, restore
