@@ -1,5 +1,5 @@
 # Renders Tidal's icon: the ring-and-tide mark (same geometry as src/Tidal.App/Tray/Logo.cs) in white
-# on an ocean-blue rounded tile. Writes the app's .ico and the website's PNGs.
+# on a black tile with a hairline border. Writes the app's .ico and the website's icons.
 #
 #   powershell -ExecutionPolicy Bypass -File build\make-icon.ps1
 
@@ -12,10 +12,12 @@ function Render-Icon([int]$size) {
     $dc = $visual.RenderOpen()
     $dc.PushTransform((New-Object System.Windows.Media.ScaleTransform ($size / 24.0), ($size / 24.0)))
 
-    # Tile: ocean gradient, iOS-style rounded square.
-    $tile = New-Object System.Windows.Media.LinearGradientBrush(
-        [System.Windows.Media.Color]::FromRgb(0x3A, 0xA6, 0xF0), [System.Windows.Media.Color]::FromRgb(0x0E, 0x4C, 0x86), 90)
-    $dc.DrawRoundedRectangle($tile, $null, (New-Object System.Windows.Rect 0, 0, 24, 24), 5.4, 5.4)
+    # Tile: near-black, softly rounded, with a hairline border so it holds its shape on dark backgrounds.
+    $tile = New-Object System.Windows.Media.SolidColorBrush ([System.Windows.Media.Color]::FromRgb(0x0A, 0x0A, 0x0A))
+    $edge = New-Object System.Windows.Media.SolidColorBrush ([System.Windows.Media.Color]::FromRgb(0x3F, 0x3F, 0x46))
+    $border = New-Object System.Windows.Media.Pen $edge, ([Math]::Max(0.5, 24.0 / $size))
+    $inset = $border.Thickness / 2
+    $dc.DrawRoundedRectangle($tile, $border, (New-Object System.Windows.Rect $inset, $inset, (24 - 2 * $inset), (24 - 2 * $inset)), 4, 4)
 
     # The mark, scaled to sit inside the tile (Logo.cs draws it on a 24x24 grid).
     $dc.PushTransform((New-Object System.Windows.Media.TranslateTransform 3.6, 3.6))
@@ -59,8 +61,11 @@ $assets = Join-Path $root 'src\Tidal.App\Assets'
 New-Item -ItemType Directory -Force $assets | Out-Null
 [IO.File]::WriteAllBytes((Join-Path $assets 'Tidal.ico'), $ico.ToArray())
 
-$site = Join-Path $root 'website'
-New-Item -ItemType Directory -Force $site | Out-Null
-[IO.File]::WriteAllBytes((Join-Path $site 'icon-512.png'), (Render-Icon 512))
-[IO.File]::WriteAllBytes((Join-Path $site 'favicon.png'), (Render-Icon 64))
+# Website (Next.js picks up app/icon.png and app/apple-icon.png by convention).
+$siteApp = Join-Path $root 'website\app'
+$sitePublic = Join-Path $root 'website\public'
+New-Item -ItemType Directory -Force $siteApp, $sitePublic | Out-Null
+[IO.File]::WriteAllBytes((Join-Path $siteApp 'icon.png'), (Render-Icon 64))
+[IO.File]::WriteAllBytes((Join-Path $siteApp 'apple-icon.png'), (Render-Icon 180))
+[IO.File]::WriteAllBytes((Join-Path $sitePublic 'icon-512.png'), (Render-Icon 512))
 "Wrote $assets\Tidal.ico and website icons"
