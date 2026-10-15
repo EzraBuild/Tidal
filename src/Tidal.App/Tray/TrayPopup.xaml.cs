@@ -27,17 +27,18 @@ public partial class TrayPopup : FluentWindow
     // click. Treat a click that soon after closing as "close", not "open again".
     private static readonly TimeSpan ReopenGuard = TimeSpan.FromMilliseconds(400);
 
-    private readonly DisplayListViewModel _viewModel;
+    private readonly AppViewModel _viewModel;
     private RECT? _anchor;
     private TaskbarEdge _edge = TaskbarEdge.Bottom;
     private long _hiddenAt;
     private bool _isOpen;
     private bool _allowClose;
 
-    public TrayPopup(DisplayListViewModel viewModel)
+    public TrayPopup(AppViewModel viewModel)
     {
         InitializeComponent();
         DataContext = _viewModel = viewModel;
+        LogoImage.Source = Logo.Render(36, Logo.BrandColor);
         SystemThemeWatcher.Watch(this, WindowBackdropType.Acrylic);
 
         SourceInitialized += (_, _) => HideFromAltTab();
@@ -50,6 +51,9 @@ public partial class TrayPopup : FluentWindow
     /// <summary>The user asked for the Settings window.</summary>
     public event EventHandler? SettingsRequested;
 
+    /// <summary>The user asked to quit Tidal.</summary>
+    public event EventHandler? QuitRequested;
+
     public bool IsOpen => _isOpen;
 
     /// <summary>True if the popup closed a moment ago, typically because of the click now asking to toggle it.</summary>
@@ -59,7 +63,7 @@ public partial class TrayPopup : FluentWindow
     internal void ShowNear(RECT? anchor)
     {
         _anchor = anchor;
-        _ = _viewModel.RefreshValuesAsync(); // values may have changed via monitor buttons or Fn keys
+        _ = _viewModel.Displays.RefreshValuesAsync(); // values may have changed via monitor buttons or Fn keys
 
         var handle = new WindowInteropHelper(this).EnsureHandle();
         // A hidden window isn't laid out, so measure the content to know the size before showing.
@@ -106,6 +110,8 @@ public partial class TrayPopup : FluentWindow
     }
 
     private void OnSettingsClick(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnQuitClick(object sender, RoutedEventArgs e) => QuitRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>Moves the popup into place for a window of <paramref name="size"/> (in DIPs).</summary>
     private void Reposition(Size size)

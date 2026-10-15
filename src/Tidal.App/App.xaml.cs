@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using Tidal.App.Osd;
 using Tidal.App.Services;
+using Tidal.App.Themes;
 using Tidal.App.Tray;
 using Tidal.App.ViewModels;
 using Tidal.Core.Settings;
@@ -27,6 +28,7 @@ public partial class App : Application
     private DisplayListViewModel? _displays;
     private AdaptiveViewModel? _adaptive;
     private ShortcutsViewModel? _shortcuts;
+    private AppViewModel? _app;
     private HotkeyManager? _hotkeys;
     private TrayIcon? _trayIcon;
     private TrayPopup? _popup;
@@ -45,22 +47,25 @@ public partial class App : Application
         }
 
         ApplicationThemeManager.ApplySystemTheme();
+        TidalTheme.Initialize();
 
         _settings = new SettingsService(new SettingsStore(SettingsStore.DefaultPath));
         _displays = new DisplayListViewModel(_settings);
         _displays.PropertyChanged += OnDisplaysPropertyChanged;
         _adaptive = new AdaptiveViewModel(_settings.Current.Adaptive, _displays, _settings.ScheduleSave);
 
-        _popup = new TrayPopup(_displays);
+        _hotkeys = new HotkeyManager();
+        _hotkeys.Pressed += OnHotkeyPressed;
+        _shortcuts = new ShortcutsViewModel(_settings.Current.Hotkeys, _hotkeys, _settings.ScheduleSave);
+        _app = new AppViewModel(_displays, _adaptive, _shortcuts);
+
+        _popup = new TrayPopup(_app);
         _popup.SettingsRequested += (_, _) => OpenSettings();
+        _popup.QuitRequested += (_, _) => Shutdown();
 
         _trayIcon = new TrayIcon("Tidal");
         _trayIcon.Selected += (_, _) => TogglePopup();
         _trayIcon.ContextMenuRequested += (_, _) => ShowTrayMenu();
-
-        _hotkeys = new HotkeyManager();
-        _hotkeys.Pressed += OnHotkeyPressed;
-        _shortcuts = new ShortcutsViewModel(_settings.Current.Hotkeys, _hotkeys, _settings.ScheduleSave);
 
         _singleInstance.ListenForActivation(() => Dispatcher.InvokeAsync(ShowPopup));
 
@@ -119,7 +124,7 @@ public partial class App : Application
         _popup?.HidePopup();
         if (_settingsWindow is null)
         {
-            _settingsWindow = new SettingsWindow(new SettingsViewModel(_displays!, _adaptive!, _shortcuts!));
+            _settingsWindow = new SettingsWindow(_app!);
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         }
         _settingsWindow.Show();
