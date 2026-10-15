@@ -17,6 +17,7 @@ public sealed class DdcDisplay : Display
     private readonly DeviceCommandQueue _queue;
     private uint _brightnessMax;
     private uint _contrastMax;
+    private uint _volumeMax;
     private MonitorCapabilities? _capabilities;
 
     internal DdcDisplay(DisplayInfo info, SafePhysicalMonitorHandle handle) : base(info)
@@ -41,6 +42,37 @@ public sealed class DdcDisplay : Display
 
         Log.Info($"{Name}: DDC/CI brightness={Format(brightness)} contrast={Format(contrast)}");
         OnValuesRead(ToPercent(brightness), ToPercent(contrast));
+
+        // Inputs and volume need the slow capabilities request; don't hold up detection for it.
+        if (SupportsBrightness) _ = LoadInputsAndVolumeAsync();
+    }
+
+    private async Task LoadInputsAndVolumeAsync()
+    {
+        try
+        {
+            var capabilities = await GetCapabilitiesAsync();
+            if (capabilities is null) return;
+
+            var inputs = capabilities.AllowedValues(VcpCode.InputSource).Select(code => new InputSource(code)).ToList();
+            var input = capabilities.Supports(VcpCode.InputSource) ? await ReadVcpAsync(VcpCode.InputSource) : null;
+            var volume = capabilities.Supports(VcpCode.AudioVolume) ? await ReadVcpAsync(VcpCode.AudioVolume) : null;
+
+            // Some monitors put flags in the high byte of the input reply.
+            InputSource? current = input is { } reply ? new InputSource((byte)(reply.Current & 0xFF)) : null;
+            if (current is { } c && inputs.Count > 0 && !inputs.Contains(c)) inputs.Insert(0, c); // it's on an input it didn't list
+
+            InputSources = inputs;
+            SupportsVolume = volume is { Maximum: > 0 };
+            if (SupportsVolume) _volumeMax = volume!.Value.Maximum;
+
+            Log.Info($"{Name}: inputs [{string.Join(", ", inputs)}], current {current?.ToString() ?? "unknown"}, volume {Format(volume)}");
+            OnValuesRead(null, null, current, ToPercent(volume));
+        }
+        catch (OperationCanceledException)
+        {
+            // Display disposed (re-detection or exit) while this was queued.
+        }
     }
 
     public override async Task<bool> RefreshAsync(CancellationToken cancellationToken = default)
@@ -52,7 +84,8 @@ public sealed class DdcDisplay : Display
         }
         var brightness = SupportsBrightness ? await ReadVcpAsync(VcpCode.Brightness).WaitAsync(cancellationToken) : null;
         var contrast = SupportsContrast ? await ReadVcpAsync(VcpCode.Contrast).WaitAsync(cancellationToken) : null;
-        OnValuesRead(ToPercent(brightness), ToPercent(contrast));
+        var volume = SupportsVolume ? await ReadVcpAsync(VcpCode.AudioVolume).WaitAsync(cancellationToken) : null;
+        OnValuesRead(ToPercent(brightness), ToPercent(contrast), volume: ToPercent(volume));
         return (!SupportsBrightness || brightness is not null) && (!SupportsContrast || contrast is not null);
     }
 
@@ -76,6 +109,10 @@ public sealed class DdcDisplay : Display
     private protected override void WriteBrightness(int percent) => WriteVcp(VcpCode.Brightness, ToRaw(percent, _brightnessMax));
 
     private protected override void WriteContrast(int percent) => WriteVcp(VcpCode.Contrast, ToRaw(percent, _contrastMax));
+
+    private protected override void WriteInput(byte code) => WriteVcp(VcpCode.InputSource, code);
+
+    private protected override void WriteVolume(int percent) => WriteVcp(VcpCode.AudioVolume, ToRaw(percent, _volumeMax));
 
     private VcpReply? ReadVcpNow(byte code)
     {

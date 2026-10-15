@@ -44,6 +44,8 @@ public abstract class Display : IDisposable
     private const int Unknown = -1;
     private int _brightness = Unknown;
     private int _contrast = Unknown;
+    private int _input = Unknown;
+    private int _volume = Unknown;
 
     private protected Display(DisplayInfo info) => Info = info;
 
@@ -58,11 +60,23 @@ public abstract class Display : IDisposable
     /// <summary>Why hardware control is limited or unavailable, worded for the user. Null when everything works.</summary>
     public string? Note { get; private protected set; }
 
-    /// <summary>Last known brightness in percent (0â€“100), or null if unknown or unsupported.</summary>
+    /// <summary>Last known brightness in percent (0–100), or null if unknown or unsupported.</summary>
     public int? Brightness => FromField(Volatile.Read(ref _brightness));
 
-    /// <summary>Last known contrast in percent (0â€“100), or null if unknown or unsupported.</summary>
+    /// <summary>Last known contrast in percent (0–100), or null if unknown or unsupported.</summary>
     public int? Contrast => FromField(Volatile.Read(ref _contrast));
+
+    /// <summary>Inputs the monitor says it has (VCP 0x60). Empty when it can't switch inputs or hasn't said yet.</summary>
+    public IReadOnlyList<InputSource> InputSources { get; private protected set; } = [];
+
+    /// <summary>The input the monitor is showing, when known.</summary>
+    public InputSource? CurrentInput => Volatile.Read(ref _input) is int code and >= 0 ? new InputSource((byte)code) : null;
+
+    /// <summary>True when the monitor has speakers whose volume Tidal can set (VCP 0x62).</summary>
+    public bool SupportsVolume { get; private protected set; }
+
+    /// <summary>Last known volume in percent (0–100), or null if unknown or unsupported.</summary>
+    public int? Volume => FromField(Volatile.Read(ref _volume));
 
     /// <summary>Raised on a background thread after values have been read from the hardware.</summary>
     public event EventHandler? ValuesRead;
@@ -95,15 +109,41 @@ public abstract class Display : IDisposable
         WriteContrast(percent);
     }
 
+    /// <summary>
+    /// Switches the monitor to another input. If that input isn't this PC, the monitor stops
+    /// showing this PC and Windows will drop it until it's switched back (with the monitor's buttons).
+    /// </summary>
+    public void SetInput(InputSource input)
+    {
+        if (!InputSources.Contains(input)) throw new ArgumentException($"{Name} has no input {input}.", nameof(input));
+        Volatile.Write(ref _input, input.Code);
+        WriteInput(input.Code);
+    }
+
+    /// <summary>Sets the speaker volume in percent. Returns at once; the write is queued, throttled and coalesced.</summary>
+    public void SetVolume(int percent)
+    {
+        if (!SupportsVolume) throw new NotSupportedException($"{Name} has no volume control.");
+        percent = Math.Clamp(percent, 0, 100);
+        Volatile.Write(ref _volume, percent);
+        WriteVolume(percent);
+    }
+
     private protected abstract void WriteBrightness(int percent);
 
     private protected virtual void WriteContrast(int percent) => throw new NotSupportedException();
 
+    private protected virtual void WriteInput(byte code) => throw new NotSupportedException();
+
+    private protected virtual void WriteVolume(int percent) => throw new NotSupportedException();
+
     /// <summary>Stores freshly read values (null leaves a value unchanged) and raises <see cref="ValuesRead"/>.</summary>
-    private protected void OnValuesRead(int? brightness, int? contrast)
+    private protected void OnValuesRead(int? brightness, int? contrast, InputSource? input = null, int? volume = null)
     {
         if (brightness is int b) Volatile.Write(ref _brightness, Math.Clamp(b, 0, 100));
         if (contrast is int c) Volatile.Write(ref _contrast, Math.Clamp(c, 0, 100));
+        if (input is { } i) Volatile.Write(ref _input, i.Code);
+        if (volume is int v) Volatile.Write(ref _volume, Math.Clamp(v, 0, 100));
         ValuesRead?.Invoke(this, EventArgs.Empty);
     }
 
