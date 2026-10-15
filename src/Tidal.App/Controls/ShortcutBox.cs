@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Tidal.Core.Hotkeys;
 using Button = Wpf.Ui.Controls.Button;
@@ -118,5 +119,35 @@ public sealed class ShortcutBox : Button
     private static void OnStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((ShortcutBox)d).UpdateContent();
 
     private void UpdateContent()
-        => Content = IsRecording ? "Press a shortcut…" : Shortcut?.ToString().Replace("+", " + ") ?? "Not set";
+    {
+        if (IsRecording)
+        {
+            Content = "Press a shortcut…";
+            return;
+        }
+        if (Shortcut is not { } shortcut)
+        {
+            Content = "Not set";
+            return;
+        }
+        // Each key as a keycap: Ctrl Alt PageUp.
+        var keys = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (string key in shortcut.ToString().Split('+')) keys.Children.Add(CreateKeycap(key));
+        Content = keys;
+    }
+
+    private static Border CreateKeycap(string key)
+    {
+        var keycap = new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            BorderThickness = new Thickness(1, 1, 1, 2.5),
+            Padding = new Thickness(8, 2, 8, 3),
+            Margin = new Thickness(0, 0, 5, 0),
+            Child = new TextBlock { Text = key, FontSize = 12, FontWeight = FontWeights.SemiBold },
+        };
+        keycap.SetResourceReference(Border.BackgroundProperty, "TidalChipBrush");
+        keycap.SetResourceReference(Border.BorderBrushProperty, "TidalChipHoverBrush");
+        return keycap;
+    }
 }
