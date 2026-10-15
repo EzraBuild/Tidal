@@ -6,7 +6,16 @@
     <AssemblyName>Tidal</AssemblyName>
     <RootNamespace>Tidal.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Tidal.ico</ApplicationIcon>
+    <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
+    <StartupObject>Tidal.App.Program</StartupObject>
   </PropertyGroup>
+
+  <!-- App.xaml compiles as a plain page so WPF doesn't generate its own Main. -->
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Tidal.Core\Tidal.Core.csproj" />
@@ -14,6 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
     <PackageReference Include="WPF-UI" Version="4.3.0" />
   </ItemGroup>
 
