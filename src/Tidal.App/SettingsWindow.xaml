@@ -120,6 +120,11 @@
                     <Path Margin="0,-3,0,0" HorizontalAlignment="Center" Data="M 0,0 H 450 L 426,18 H 24 Z"
                           Fill="{DynamicResource TidalStandBrush}"
                           Visibility="{Binding IsInternal, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Video input, under the stand -->
+                    <StackPanel Margin="0,16,0,0" Visibility="{Binding HasInputs, Converter={StaticResource BoolToVisibility}}">
+                        <controls:InputPicker HorizontalAlignment="Center" />
+                        <TextBlock Text="INPUT" Margin="0,6,0,0" Style="{StaticResource TidalEyebrow}" />
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Contrast and adaptive brightness -->
@@ -131,6 +136,13 @@
                                                  AutomationProperties.Name="{Binding Name, StringFormat={}{0} current contrast}" />
                         </Border>
                         <TextBlock Text="CURRENT" Style="{StaticResource TidalDialLabel}" Margin="0" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,0,28" Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="VOLUME" Style="{StaticResource TidalEyebrow}" Margin="0,0,0,8" />
+                        <Border Style="{StaticResource TidalCurrentCard}" Background="{DynamicResource TidalVolumeSoftBrush}">
+                            <controls:NumberDial FontSize="56" Foreground="{DynamicResource TidalVolumeBrush}" Value="{Binding Volume}"
+                                                 AutomationProperties.Name="{Binding Name, StringFormat={}{0} volume}" />
+                        </Border>
                     </StackPanel>
                     <StackPanel Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="ADAPTIVE" Style="{StaticResource TidalEyebrow}" Margin="0,0,0,10" />

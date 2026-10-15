@@ -96,6 +96,15 @@
                                     Visibility="{Binding SupportsBrightness, Converter={StaticResource BoolToVisibility}}"
                                     Value="{Binding Brightness}" />
 
+                            <Slider Margin="0,8,0,0" Style="{StaticResource TidalVolumeSlider}"
+                                    behaviors:SliderWheel.Step="2"
+                                    AutomationProperties.Name="{Binding Name, StringFormat={}{0} volume}"
+                                    Visibility="{Binding SupportsVolume, Converter={StaticResource BoolToVisibility}}"
+                                    Value="{Binding Volume}" />
+
+                            <controls:InputPicker Margin="0,10,0,0" HorizontalAlignment="Center"
+                                                  Visibility="{Binding HasInputs, Converter={StaticResource BoolToVisibility}}" />
+
                             <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Text="No hardware control"
                                        ToolTip="{Binding Note}" Style="{StaticResource TidalCaption}"
                                        Visibility="{Binding HasNote, Converter={StaticResource BoolToVisibility}}" />
