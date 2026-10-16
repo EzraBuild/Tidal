@@ -1,8 +1,19 @@
-# Tidal
+<p align="center">
+  <img src="website/public/icon-512.png" alt="Tidal logo" width="96" height="96">
+</p>
+
+<h1 align="center">Tidal</h1>
+
+<p align="center">
+  Brightness control for every monitor on Windows.<br>
+  <a href="https://tidal-lemon.vercel.app">Website</a> ·
+  <a href="https://github.com/EzraBuild/Tidal/releases/latest/download/Tidal-win-Setup.exe">Download for Windows</a> ·
+  <a href="https://github.com/EzraBuild/Tidal/releases">Releases</a>
+</p>
 
 A Windows tray app for controlling external monitors: hardware brightness and contrast over DDC/CI,
-the built-in laptop screen through WMI, adaptive brightness, hotkeys, and input switching.
-Inspired by Lunar for macOS; written from scratch.
+the built-in laptop screen through WMI, adaptive brightness, software dimming, per-app brightness,
+hotkeys, and input switching. Inspired by Lunar for macOS; written from scratch.
 
 ## Download
 
