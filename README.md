@@ -22,7 +22,7 @@ warn on first run: choose **More info → Run anyway**.
 | 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Done |
 | 6 | Software dimming below 0% / for monitors without DDC/CI | Done |
 | 7 | Per-app presets | Done |
-| 8 | JSON settings, start with Windows | Planned |
+| 8 | JSON settings, start with Windows | Done |
 
 ## Layout
 
@@ -34,17 +34,20 @@ src/Tidal.Core         Hardware layer, no UI
                        light sensor sources
   Hotkeys/             Shortcut parsing and formatting
   Settings/            Settings model and JSON store
+  Startup/             The command Windows runs at sign-in
 src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, square, Geist fonts)
   Tray/                Notification-area icon, the brightness popup, the logo
   Osd/                 On-screen brightness indicator for shortcuts
   Themes/              Tidal's palette (light/dark) and control styles: pill slider, chips, tabs, tiles
   Controls/            Shortcut recorder, number dial, day curve chart, mode picker
-  Services/            Global hotkeys, settings persistence, software dimming overlays, app presets
+  Services/            Global hotkeys, settings persistence, software dimming overlays, app presets,
+                       start with Windows
   ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
   Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
 tools/Tidal.Diag       Console diagnostics: what each display supports
 tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits and
-                       dimming below 0, app presets, shortcuts, settings store, sun times, adaptive curves
+                       dimming below 0, app presets, startup command, shortcuts, settings store, sun
+                       times, adaptive curves
 ```
 
 ### How detection works
@@ -122,8 +125,13 @@ drag it onto the taskbar to keep it visible).
   brightness waits meanwhile. Add apps from the ones that are open, or browse for a program.
   Tidal's own windows, the taskbar and the Start menu don't count as switching away.
 - **Right-click the icon** for Settings (contrast, limits, adaptive brightness, dimming below 0,
-  app presets, shortcuts, why a display can't be controlled), detecting displays again, and Quit.
+  app presets, shortcuts, start with Windows, why a display can't be controlled), detecting
+  displays again, and Quit.
 - Hovering the icon shows each display's brightness.
+- **Start with Windows** (the General tab in Settings): Tidal adds itself to the current user's
+  Run key, so it starts in the tray when you sign in, without the popup. It's on after a fresh
+  install and removed again on uninstall. If it's turned off in Windows' Startup apps (Settings or
+  Task Manager), the General tab says so. The tab also shows the version and the settings file.
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
 
