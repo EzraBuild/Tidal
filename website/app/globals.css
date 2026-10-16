@@ -988,6 +988,21 @@ kbd {
     display: none;
   }
 
+  /* All five tabs across a phone: share the bar, with less padding and tracking. */
+  .viewer-tabs {
+    flex: 1;
+  }
+
+  .viewer-tab {
+    flex: 1 1 auto;
+    padding: 11px 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .viewer-tab:last-child {
+    border-right: 0;
+  }
+
   .shot-compact {
     width: 74%;
   }

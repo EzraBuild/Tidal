@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import popup from "@/public/screens/popup.png";
 import display from "@/public/screens/display.png";
 import adaptive from "@/public/screens/adaptive.png";
+import apps from "@/public/screens/apps.png";
 import shortcuts from "@/public/screens/shortcuts.png";
 
 type Screen = { id: string; label: string; image: StaticImageData; alt: string; caption: string; compact?: boolean };
@@ -15,22 +16,29 @@ const screens: Screen[] = [
     label: "tray",
     image: popup,
     compact: true,
-    alt: "Tidal's tray popup: a brightness slider for each display, an input switcher, presets and Link all",
+    alt: "Tidal's tray popup following the sun: a brightness slider for each display, the monitor's input, presets and Link all",
     caption: "Click the tray icon: a slider per display, the monitor's input, presets and Link all.",
   },
   {
     id: "display",
     label: "display",
     image: display,
-    alt: "Tidal Settings for the laptop screen: lowest, current and highest brightness around a drawing of the laptop",
-    caption: "One page per display: lowest, current and highest brightness, plus contrast and input where the monitor has them.",
+    alt: "Tidal Settings for an external monitor: lowest, current and highest brightness, contrast and input around a drawing of the monitor",
+    caption: "One page per display: its brightness range, contrast, input, adaptive brightness and dimming below 0.",
   },
   {
     id: "adaptive",
     label: "adaptive",
     image: adaptive,
-    alt: "Tidal's adaptive brightness page with four modes: manual, follow the sun, match the laptop and light sensor",
+    alt: "Tidal's adaptive brightness page following the sun, with today's brightness curve from sunrise to sunset",
     caption: "Choose what brightness follows: you, the sun, the laptop screen or a light sensor.",
+  },
+  {
+    id: "apps",
+    label: "apps",
+    image: apps,
+    alt: "Tidal's app presets: Google Chrome, Slack and Telegram, each with its own brightness",
+    caption: "Give apps their own brightness: the screen showing one switches while it's in front.",
   },
   {
     id: "shortcuts",
