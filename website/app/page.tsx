@@ -1,79 +1,83 @@
 import Image from "next/image";
 import { LogoMark, Wordmark } from "@/components/logo";
 import { ScreenTabs } from "@/components/screen-tabs";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { GitHubIcon } from "@/components/icons";
 import {
-  AppsIcon,
-  ArrowIcon,
-  DownloadIcon,
-  GitHubIcon,
-  LinkIcon,
-  LockIcon,
-  MoonIcon,
-  PlugIcon,
-  RangeIcon,
-  SunIcon,
-  SunsetIcon,
-  TrayIcon,
-  WarningIcon,
-} from "@/components/icons";
+  ArrowRight,
+  Cable,
+  Check,
+  ChevronDown,
+  Download,
+  LayoutGrid,
+  Link,
+  Moon,
+  PanelBottom,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sun,
+  Sunset,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 
 const version = "0.1.5";
 const repo = "https://github.com/EzraBuild/Tidal";
 const installer = `${repo}/releases/latest/download/Tidal-win-Setup.exe`;
 const portable = `${repo}/releases/latest/download/Tidal-win-Portable.zip`;
 
-const features = [
+const features: { tag: string; icon: LucideIcon; title: string; text: string }[] = [
   {
     tag: "DDC/CI",
-    icon: SunIcon,
+    icon: Sun,
     title: "Real hardware brightness",
     text: "Talks to your monitors over DDC/CI, the same channel as their own buttons, so the backlight changes, not a dimmed picture. Laptop screens work too.",
   },
   {
     tag: "Adaptive",
-    icon: SunsetIcon,
+    icon: Sunset,
     title: "Follows your day",
     text: "Dim at night and brightest at midday, worked out offline from your location. Or let external screens match the laptop, or a light sensor.",
   },
   {
     tag: "Dimming",
-    icon: MoonIcon,
+    icon: Moon,
     title: "Darker than 0%",
     text: "Turn on Dim below 0 and keep going past a monitor's lowest brightness, in software. Monitors without DDC/CI get a slider that dims them the same way.",
   },
   {
     tag: "Apps",
-    icon: AppsIcon,
+    icon: LayoutGrid,
     title: "A brightness for each app",
     text: "Give your video player, a game or anything else its own brightness. The screen showing it switches while it's in front, and goes back when you switch away.",
   },
   {
     tag: "Link all",
-    icon: LinkIcon,
+    icon: Link,
     title: "Every screen in step",
     text: "Move every display together, each within its own range, so a bright monitor and a dim laptop stay matched.",
   },
   {
     tag: "Limits",
-    icon: RangeIcon,
+    icon: SlidersHorizontal,
     title: "Your range, per display",
     text: "Set a lowest and highest brightness for each display. Sliders, shortcuts, presets and adaptive brightness all stay inside it.",
   },
   {
     tag: "Inputs",
-    icon: PlugIcon,
+    icon: Cable,
     title: "Inputs and volume",
     text: "Switch a monitor between DisplayPort, HDMI and USB-C, and set its speaker volume, when the monitor supports it.",
   },
   {
     tag: "Tray",
-    icon: TrayIcon,
+    icon: PanelBottom,
     title: "Lives in the tray",
     text: "One click away, in light and dark mode, with a small level on screen when you use the keys. It tells you plainly when a display can't be controlled.",
   },
   {
     tag: "Private",
-    icon: LockIcon,
+    icon: ShieldCheck,
     title: "Nothing leaves your PC",
     text: "No account, no analytics, no telemetry. Sunrise and sunset are calculated on your PC, and settings are a file you own.",
   },
@@ -91,7 +95,6 @@ const requirements = [
   "Installs just for you: no admin rights, no account",
   "External monitors need DDC/CI, which most have (usually on in the monitor's menu)",
 ];
-
 
 const faq = [
   {
@@ -188,6 +191,7 @@ export default function Home() {
             <a href={repo} className="icon-link" aria-label="Tidal on GitHub">
               <GitHubIcon />
             </a>
+            <ThemeToggle />
             <a href="#download" className="btn btn-primary btn-small">
               Download
             </a>
@@ -212,7 +216,7 @@ export default function Home() {
               </p>
               <div className="actions">
                 <a href={installer} className="btn btn-primary">
-                  <DownloadIcon />
+                  <Download size={18} />
                   Download for Windows
                 </a>
                 <a href={repo} className="btn btn-outline">
@@ -248,7 +252,7 @@ export default function Home() {
               {features.map(({ tag, icon: Icon, title, text }) => (
                 <article key={tag} className="feature">
                   <div className="feature-top">
-                    <Icon className="feature-icon" />
+                    <Icon className="feature-icon" size={20} strokeWidth={1.5} />
                     <span className="feature-tag">{tag}</span>
                   </div>
                   <h3>{title}</h3>
@@ -279,7 +283,7 @@ export default function Home() {
                 <Keys keys={["Ctrl", "Alt", "PageDown"]} />
               </div>
               <div className="osd" aria-hidden="true">
-                <SunIcon />
+                <Sun size={18} strokeWidth={1.75} />
                 <span className="osd-track">
                   <span className="osd-fill" />
                 </span>
@@ -298,7 +302,7 @@ export default function Home() {
               <p className="fineprint">Version {version} · preview</p>
               <div className="actions">
                 <a href={installer} className="btn btn-primary">
-                  <DownloadIcon />
+                  <Download size={18} />
                   Download installer
                 </a>
                 <a href={portable} className="btn btn-outline">
@@ -306,7 +310,7 @@ export default function Home() {
                 </a>
               </div>
               <div className="note" role="note">
-                <WarningIcon className="note-icon" />
+                <TriangleAlert className="note-icon" size={18} strokeWidth={1.75} />
                 <p>
                   Windows may say <q>Windows protected your PC</q>: this preview isn&apos;t code-signed yet. Click{" "}
                   <strong>More info</strong>, then <strong>Run anyway</strong>.
@@ -319,7 +323,7 @@ export default function Home() {
                 <ul className="list">
                   {requirements.map((item) => (
                     <li key={item}>
-                      <span className="list-mark">✓</span>
+                      <Check className="list-mark" size={16} strokeWidth={2} />
                       {item}
                     </li>
                   ))}
@@ -341,7 +345,10 @@ export default function Home() {
             <div className="faq">
               {faq.map((item) => (
                 <details key={item.q}>
-                  <summary>{item.q}</summary>
+                  <summary>
+                    {item.q}
+                    <ChevronDown className="faq-chevron" size={16} />
+                  </summary>
                   <p>{item.a}</p>
                 </details>
               ))}
@@ -355,7 +362,7 @@ export default function Home() {
             <h2>Every screen, just right.</h2>
             <a href={installer} className="btn btn-primary">
               Download for Windows
-              <ArrowIcon />
+              <ArrowRight size={18} />
             </a>
           </div>
         </section>

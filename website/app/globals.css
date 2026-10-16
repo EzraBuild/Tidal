@@ -17,8 +17,25 @@
   color-scheme: light;
 }
 
+/* Dark: picked with the toggle (next-themes sets data-theme), or the system's choice when the
+   visitor hasn't picked one (and before scripts run). */
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --hover: #111111;
+  --border: #262626;
+  --line: #333333;
+  --fg: #fafafa;
+  --muted: #a3a3a3;
+  --faint: #6b6b6b;
+  --invert: #fafafa;
+  --on-invert: #0a0a0a;
+  --grid: rgba(255, 255, 255, 0.05);
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --bg: #000000;
     --surface: #0a0a0a;
     --hover: #111111;
@@ -277,6 +294,22 @@ p {
 .icon-link:hover {
   color: var(--fg);
   border-color: var(--border);
+}
+
+/* Light/dark toggle: shows the icon for the current theme. */
+.theme-toggle {
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.theme-icon-dark,
+:root[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-dark {
+  display: block;
 }
 
 /* ---------- Hero ---------- */
@@ -723,11 +756,8 @@ kbd {
 
 .list-mark {
   flex: none;
-  width: 3ch;
-  font-family: var(--font-mono), monospace;
-  font-size: 13px;
+  margin-top: 3px;
   color: var(--faint);
-  padding-top: 1px;
 }
 
 /* FAQ */
@@ -756,15 +786,19 @@ kbd {
   display: none;
 }
 
-.faq summary::after {
-  content: "+";
+/* Like shadcn's accordion: a chevron that turns over when the answer opens. */
+.faq-chevron {
   flex: none;
-  font: 400 18px/1 var(--font-mono), monospace;
   color: var(--faint);
+  transition: transform 0.2s;
 }
 
-.faq details[open] summary::after {
-  content: "−";
+.faq details[open] .faq-chevron {
+  transform: rotate(180deg);
+}
+
+.faq summary:hover .faq-chevron {
+  color: var(--fg);
 }
 
 .faq details p {
