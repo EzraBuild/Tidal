@@ -36,6 +36,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Header: wordmark and what brightness follows. -->
@@ -177,6 +178,19 @@
                     </Button>
                 </StackPanel>
             </Grid>
+
+            <!-- A downloaded update, waiting for a restart. -->
+            <Border Grid.Row="5" Padding="16,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource TidalBorderBrush}"
+                    Background="{DynamicResource TidalSurfaceBrush}"
+                    Visibility="{Binding General.Updates.IsReady, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource TidalMonoFont}" FontSize="11"
+                               Text="{Binding General.Updates.ReadyVersion, StringFormat=UPDATE {0} READY}" />
+                    <Button HorizontalAlignment="Right" Style="{StaticResource TidalChipButton}" Content="Restart"
+                            Command="{Binding General.Updates.RestartToUpdateCommand}"
+                            ToolTip="Quit Tidal, install the update and start it again" />
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </ui:FluentWindow>

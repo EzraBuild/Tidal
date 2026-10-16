@@ -418,6 +418,33 @@
                     </Grid>
                 </Border>
 
+                <Border Style="{StaticResource TidalPanel}" Margin="0,-1,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="UPDATES" Style="{StaticResource LeftEyebrow}" />
+                            <TextBlock Margin="0,8,0,0" Style="{StaticResource TidalCaption}" TextWrapping="Wrap" Text="{Binding Updates.Status}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0"
+                                        Visibility="{Binding Updates.CanUpdate, Converter={StaticResource BoolToVisibility}}">
+                                <Button Margin="0,0,8,0" Style="{StaticResource TidalPrimaryButton}" Content="Restart to update"
+                                        Command="{Binding Updates.RestartToUpdateCommand}"
+                                        Visibility="{Binding Updates.IsReady, Converter={StaticResource BoolToVisibility}}" />
+                                <Button Style="{StaticResource TidalChipButton}" Content="Check now" Command="{Binding Updates.CheckNowCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center"
+                                    Visibility="{Binding Updates.CanUpdate, Converter={StaticResource BoolToVisibility}}"
+                                    ToolTip="Check for new versions now and then, and download them in the background">
+                            <TextBlock Text="AUTOMATIC" Style="{StaticResource TidalEyebrow}" Margin="0,0,0,10" />
+                            <ui:ToggleSwitch HorizontalAlignment="Center" IsChecked="{Binding Updates.AutoUpdate}"
+                                             AutomationProperties.Name="Update automatically" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <UniformGrid Columns="2" Margin="0,-1,0,0">
                     <Border Style="{StaticResource TidalPanel}">
                         <StackPanel>

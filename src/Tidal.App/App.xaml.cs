@@ -30,6 +30,7 @@ public partial class App : Application
     private DisplayListViewModel? _displays;
     private DimmingService? _dimming;
     private AppPresetService? _appPresetService;
+    private UpdatesViewModel? _updates;
     private AdaptiveViewModel? _adaptive;
     private ShortcutsViewModel? _shortcuts;
     private AppViewModel? _app;
@@ -69,7 +70,8 @@ public partial class App : Application
             _settings.ScheduleSave();
             _appPresetService.ScheduleApply();
         });
-        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts, new GeneralViewModel());
+        _updates = new UpdatesViewModel(_settings.Current, _settings.ScheduleSave);
+        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts, new GeneralViewModel(_updates));
 
         _popup = new TrayPopup(_app);
         _popup.SettingsRequested += (_, _) => OpenSettings();
@@ -91,6 +93,8 @@ public partial class App : Application
     {
         _appPresetService?.Dispose(); // puts displays held by an app preset back, before saving
         _settings?.SaveNow();
+        _updates?.ApplyOnExit(); // a downloaded update installs once Tidal has quit
+        _updates?.Dispose();
         _hotkeys?.Dispose();
         _trayIcon?.Dispose();
         _popup?.AllowClose();

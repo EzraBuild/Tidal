@@ -9,9 +9,13 @@ using Tidal.Core.Settings;
 
 namespace Tidal.App.ViewModels;
 
-/// <summary>The General tab: starting with Windows, the version, and where settings are kept.</summary>
+/// <summary>The General tab: starting with Windows, updates, the version, and where settings are kept.</summary>
 public sealed partial class GeneralViewModel : ObservableObject
 {
+    public GeneralViewModel(UpdatesViewModel updates) => Updates = updates;
+
+    public UpdatesViewModel Updates { get; }
+
     /// <summary>
     /// Start Tidal, in the tray, when you sign in. Read from Windows each time, since it can also be
     /// changed in Settings › Apps › Startup or Task Manager.
