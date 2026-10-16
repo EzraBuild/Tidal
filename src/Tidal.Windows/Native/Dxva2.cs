@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Tidal.Core.Native;
+namespace Tidal.Windows.Native;
 
 // DDC/CI through the Monitor Configuration API (dxva2.dll).
 

@@ -13,6 +13,8 @@ using System.Runtime.InteropServices;
 using Tidal.Core;
 using Tidal.Core.Adaptive;
 using Tidal.Core.Displays;
+using Tidal.Windows.Adaptive;
+using Tidal.Windows.Displays;
 
 SetProcessDpiAwarenessContext(-4); // per-monitor aware, so bounds are in physical pixels
 
@@ -25,7 +27,7 @@ Log.Written += (level, message) =>
     if (verbose || level >= LogLevel.Warning) Console.WriteLine($"    [{level}] {message}");
 };
 
-using var manager = new DisplayManager();
+using var manager = new DisplayManager(new WindowsDisplayDetector());
 var stopwatch = Stopwatch.StartNew();
 var displays = await manager.RefreshAsync();
 Console.WriteLine($"Found {displays.Count} display(s) in {stopwatch.ElapsedMilliseconds} ms");
@@ -52,7 +54,7 @@ int watchIndex = Array.IndexOf(args, "--watch-builtin");
 if (watchIndex >= 0)
 {
     int seconds = watchIndex + 1 < args.Length && int.TryParse(args[watchIndex + 1], out int s) ? s : 30;
-    if (!BuiltInDisplaySource.IsAvailable)
+    if (!WmiBuiltInDisplaySource.IsAvailable)
     {
         Console.WriteLine("No built-in screen with WMI brightness.");
         return 1;
@@ -60,7 +62,7 @@ if (watchIndex >= 0)
     Console.WriteLine();
     Console.WriteLine($"Watching the built-in screen's brightness for {seconds} s...");
     var watch = Stopwatch.StartNew();
-    using var source = new BuiltInDisplaySource();
+    using var source = new WmiBuiltInDisplaySource();
     source.LevelChanged += (_, _) => Console.WriteLine($"  {watch.Elapsed.TotalSeconds,6:0.00} s  {source.Percent}%");
     source.Start();
     await Task.Delay(TimeSpan.FromSeconds(seconds));

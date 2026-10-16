@@ -1,6 +1,6 @@
-using Tidal.Core.Startup;
+using Tidal.Windows.Startup;
 
-namespace Tidal.Core.Tests;
+namespace Tidal.Windows.Tests;
 
 public class StartupCommandTests
 {

@@ -8,10 +8,10 @@ public static class Log
     /// <summary>Raised for every log line, on whichever thread wrote it.</summary>
     public static event Action<LogLevel, string>? Written;
 
-    internal static void Debug(string message) => Write(LogLevel.Debug, message);
-    internal static void Info(string message) => Write(LogLevel.Info, message);
-    internal static void Warning(string message) => Write(LogLevel.Warning, message);
-    internal static void Error(string message) => Write(LogLevel.Error, message);
+    public static void Debug(string message) => Write(LogLevel.Debug, message);
+    public static void Info(string message) => Write(LogLevel.Info, message);
+    public static void Warning(string message) => Write(LogLevel.Warning, message);
+    public static void Error(string message) => Write(LogLevel.Error, message);
 
     private static void Write(LogLevel level, string message)
     {

@@ -1,14 +1,16 @@
 using System.Runtime.InteropServices;
-using Tidal.Core.Native;
+using Tidal.Core;
+using Tidal.Core.Displays;
+using Tidal.Windows.Native;
 
-namespace Tidal.Core.Displays;
+namespace Tidal.Windows.Displays;
 
 /// <summary>
 /// Builds the list of displays by joining three Windows views of the same hardware: GDI monitors
 /// (bounds, DDC/CI handles), CCD display paths (real names, device paths, connection type) and
 /// WMI brightness instances (built-in screens).
 /// </summary>
-internal static class DisplayTopology
+public sealed class WindowsDisplayDetector : IDisplayDetector
 {
     private sealed record Target(string GdiDeviceName, string FriendlyName, string DevicePath, uint OutputTechnology);
 
@@ -23,7 +25,7 @@ internal static class DisplayTopology
         public string? WmiInstance { get; set; }
     }
 
-    public static List<Display> CreateDisplays()
+    public IReadOnlyList<Display> Detect()
     {
         var targets = QueryTargets();
         var candidates = new List<Candidate>();
@@ -111,7 +113,7 @@ internal static class DisplayTopology
         {
             Id = devicePath ?? monitor.GdiDeviceName,
             Name = name,
-            GdiDeviceName = monitor.GdiDeviceName,
+            DeviceName = monitor.GdiDeviceName,
             Bounds = monitor.Bounds,
             IsPrimary = monitor.IsPrimary,
             IsInternal = isInternal,

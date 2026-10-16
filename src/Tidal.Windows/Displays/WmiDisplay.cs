@@ -1,7 +1,9 @@
 using System.Management;
 using System.Runtime.InteropServices;
+using Tidal.Core;
+using Tidal.Core.Displays;
 
-namespace Tidal.Core.Displays;
+namespace Tidal.Windows.Displays;
 
 /// <summary>A built-in laptop screen controlled through WMI (root\WMI WmiMonitorBrightness).</summary>
 public sealed class WmiDisplay : Display
@@ -20,7 +22,7 @@ public sealed class WmiDisplay : Display
 
     public override ControlMethod Method => SupportsBrightness ? ControlMethod.Wmi : ControlMethod.None;
 
-    internal override async Task InitializeAsync(CancellationToken cancellationToken)
+    protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
         int? brightness = await _queue.RunAsync(_wmi.TryRead).WaitAsync(cancellationToken);
         SupportsBrightness = brightness.HasValue;
@@ -41,7 +43,7 @@ public sealed class WmiDisplay : Display
         return brightness.HasValue;
     }
 
-    private protected override void WriteBrightness(int percent) => _queue.Post(VcpCode.Brightness, () => _wmi.Write(percent));
+    protected override void WriteBrightness(int percent) => _queue.Post(VcpCode.Brightness, () => _wmi.Write(percent));
 
     protected override void Dispose(bool disposing)
     {

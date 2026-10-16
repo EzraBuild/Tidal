@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Tidal.Core.Adaptive;
 using Tidal.Core.Settings;
+using Tidal.Windows.Adaptive;
 using Windows.Devices.Geolocation;
 
 namespace Tidal.App.ViewModels;
@@ -24,8 +25,8 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
         _settings = settings;
         _displays = displays;
         _settingsChanged = settingsChanged;
-        IsBuiltInAvailable = BuiltInDisplaySource.IsAvailable;
-        IsSensorAvailable = LightSensorSource.IsAvailable;
+        IsBuiltInAvailable = WmiBuiltInDisplaySource.IsAvailable;
+        IsSensorAvailable = WindowsLightSensorSource.IsAvailable;
 
         // Re-detected displays and newly switched-on displays pick up the current level at once.
         _displays.Displays.CollectionChanged += (_, _) => ApplyLevel();
@@ -159,8 +160,8 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
         _source = Mode switch
         {
             AdaptiveMode.Sun when _settings is { Latitude: double lat, Longitude: double lon } => new SunSource(lat, lon),
-            AdaptiveMode.BuiltInDisplay when IsBuiltInAvailable => new BuiltInDisplaySource(),
-            AdaptiveMode.LightSensor when IsSensorAvailable => new LightSensorSource(),
+            AdaptiveMode.BuiltInDisplay when IsBuiltInAvailable => new WmiBuiltInDisplaySource(),
+            AdaptiveMode.LightSensor when IsSensorAvailable => new WindowsLightSensorSource(),
             _ => null,
         };
 

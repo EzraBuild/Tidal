@@ -38,13 +38,17 @@ warn on first run: choose **More info → Run anyway**.
 ## Layout
 
 ```
-src/Tidal.Core         Hardware layer, no UI
-  Native/              P/Invoke: user32 (monitor enumeration, CCD) and dxva2 (DDC/CI)
-  Displays/            Display model, detection, DDC/CI + WMI backends, write throttling, limits
-  Adaptive/            Sun position (NOAA equations), level curves, and the sun / built-in screen /
-                       light sensor sources
+src/Tidal.Core         What Tidal does on any operating system: plain .NET, no UI, no OS calls
+  Displays/            Display model, the detector interface, write throttling, limits, software
+                       dimming levels, DDC/CI capabilities parsing
+  Adaptive/            Sun position (NOAA equations), level curves, the sun source, and the base
+                       classes for the built-in screen and light sensor sources
   Hotkeys/             Shortcut parsing and formatting
   Settings/            Settings model and JSON store
+src/Tidal.Windows      Windows hardware
+  Native/              P/Invoke: user32 (monitor enumeration, CCD) and dxva2 (DDC/CI)
+  Displays/            Detection, DDC/CI and WMI backends
+  Adaptive/            Built-in screen (WMI) and light sensor (WinRT) sources
   Startup/             The command Windows runs at sign-in
 src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, square, Geist fonts)
   Tray/                Notification-area icon, the brightness popup, the logo
@@ -56,14 +60,14 @@ src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, squa
   ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
   Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
 tools/Tidal.Diag       Console diagnostics: what each display supports
-tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits and
-                       dimming below 0, app presets, startup command, shortcuts, settings store, sun
-                       times, adaptive curves
+tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, limits and dimming below 0,
+                       app presets, shortcuts, settings store, sun times, adaptive curves
+tests/Tidal.Windows.Tests  Interop struct sizes, startup command
 ```
 
 ### How detection works
 
-`DisplayTopology` joins three views of the same hardware:
+On Windows, `WindowsDisplayDetector` joins three views of the same hardware:
 
 - **GDI monitors** (`EnumDisplayMonitors`) give bounds, the primary flag, and DDC/CI handles via
   `GetPhysicalMonitorsFromHMONITOR`.

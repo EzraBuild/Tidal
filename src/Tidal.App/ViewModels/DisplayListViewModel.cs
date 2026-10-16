@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Tidal.App.Services;
 using Tidal.Core.Displays;
+using Tidal.Windows.Displays;
 
 namespace Tidal.App.ViewModels;
 
@@ -21,7 +22,7 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
     private static readonly TimeSpan DisplayChangeSettleTime = TimeSpan.FromSeconds(1.5);
     private static readonly TimeSpan ResumeSettleTime = TimeSpan.FromSeconds(4);
 
-    private readonly DisplayManager _manager = new();
+    private readonly DisplayManager _manager = new(new WindowsDisplayDetector());
     private readonly SettingsService _settings;
     private readonly DispatcherTimer _redetectTimer;
     private bool _refreshRequestedWhileBusy;

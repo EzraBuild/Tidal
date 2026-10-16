@@ -1,5 +1,5 @@
 using Microsoft.Win32;
-using Tidal.Core.Startup;
+using Tidal.Windows.Startup;
 
 namespace Tidal.App.Services;
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Windows hardware: displays (CCD, GDI, DDC/CI through dxva2, WMI brightness), the built-in
+       screen and light sensor as adaptive sources, and the startup command. -->
+
+  <PropertyGroup>
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tidal.Core\Tidal.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tidal.Windows.Tests" />
+  </ItemGroup>
+
+</Project>

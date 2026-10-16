@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Tidal.Core\Tidal.Core.csproj" />
+    <ProjectReference Include="..\..\src\Tidal.Windows\Tidal.Windows.csproj" />
   </ItemGroup>
 
 </Project>

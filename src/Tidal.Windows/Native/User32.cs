@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Tidal.Core.Native;
+namespace Tidal.Windows.Native;
 
 // Monitor enumeration and the Connecting and Configuring Displays (CCD) API.
 // Struct layouts mirror wingdi.h / winuser.h; NativeStructTests checks their sizes.

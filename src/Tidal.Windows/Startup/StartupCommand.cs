@@ -1,4 +1,4 @@
-namespace Tidal.Core.Startup;
+namespace Tidal.Windows.Startup;
 
 /// <summary>
 /// The command Windows runs at sign-in to start Tidal, and how to read one back. Windows keeps it

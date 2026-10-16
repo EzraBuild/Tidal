@@ -1,7 +1,7 @@
 namespace Tidal.Core.Displays;
 
 /// <summary>Owns the current set of displays and re-detects them on demand.</summary>
-public sealed class DisplayManager : IDisposable
+public sealed class DisplayManager(IDisplayDetector detector) : IDisposable
 {
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private IReadOnlyList<Display> _displays = [];
@@ -22,7 +22,7 @@ public sealed class DisplayManager : IDisposable
             DisposeAll(_displays);
             _displays = [];
 
-            var displays = await Task.Run(DisplayTopology.CreateDisplays, cancellationToken);
+            var displays = await Task.Run(detector.Detect, cancellationToken);
             try
             {
                 // Each display has its own I/O thread, so slow DDC probes run side by side.

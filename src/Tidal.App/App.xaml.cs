@@ -10,7 +10,7 @@ using Tidal.App.Themes;
 using Tidal.App.Tray;
 using Tidal.App.ViewModels;
 using Tidal.Core.Settings;
-using Tidal.Core.Startup;
+using Tidal.Windows.Startup;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using static Tidal.App.Interop.NativeMethods;

@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <PackageReference Include="System.Management" Version="8.0.0" />
-  </ItemGroup>
+  <!-- What Tidal does, independent of the operating system: the display model, limits, write
+       throttling, adaptive curves, shortcuts and settings. Each OS project supplies the hardware. -->
 
   <ItemGroup>
     <InternalsVisibleTo Include="Tidal.Core.Tests" />

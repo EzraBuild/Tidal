@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using Tidal.Core.Native;
+using Tidal.Windows.Native;
 
-namespace Tidal.Core.Tests;
+namespace Tidal.Windows.Tests;
 
 /// <summary>Interop structs must match the Windows SDK sizes (x64) exactly or calls corrupt memory.</summary>
 public class NativeStructTests

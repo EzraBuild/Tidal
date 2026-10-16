@@ -1,8 +1,10 @@
 <Project>
   <!-- Settings shared by every project in the solution. -->
   <PropertyGroup>
-    <!-- Windows 10 2004+ target, for the WinRT light sensor and location APIs. -->
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <!-- Plain .NET for the parts that run on every operating system... -->
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- ...and Windows 10 2004+ for the Windows projects, for the WinRT light sensor and location APIs. -->
+    <WindowsTargetFramework>net8.0-windows10.0.19041.0</WindowsTargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

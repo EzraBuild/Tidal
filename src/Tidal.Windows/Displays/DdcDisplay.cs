@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
 using System.Text;
-using Tidal.Core.Native;
+using Tidal.Core;
+using Tidal.Core.Displays;
+using Tidal.Windows.Native;
 
-namespace Tidal.Core.Displays;
+namespace Tidal.Windows.Displays;
 
 /// <summary>An external monitor controlled over DDC/CI.</summary>
 public sealed class DdcDisplay : Display
@@ -28,7 +30,7 @@ public sealed class DdcDisplay : Display
 
     public override ControlMethod Method => SupportsBrightness || SupportsContrast ? ControlMethod.DdcCi : ControlMethod.None;
 
-    internal override async Task InitializeAsync(CancellationToken cancellationToken)
+    protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
         var brightness = await ReadVcpAsync(VcpCode.Brightness).WaitAsync(cancellationToken);
         // If brightness didn't answer, DDC/CI is off or blocked; skip further slow, failing reads.
@@ -106,13 +108,13 @@ public sealed class DdcDisplay : Display
         return _capabilities = raw is null ? null : MonitorCapabilities.Parse(raw);
     }
 
-    private protected override void WriteBrightness(int percent) => WriteVcp(VcpCode.Brightness, ToRaw(percent, _brightnessMax));
+    protected override void WriteBrightness(int percent) => WriteVcp(VcpCode.Brightness, ToRaw(percent, _brightnessMax));
 
-    private protected override void WriteContrast(int percent) => WriteVcp(VcpCode.Contrast, ToRaw(percent, _contrastMax));
+    protected override void WriteContrast(int percent) => WriteVcp(VcpCode.Contrast, ToRaw(percent, _contrastMax));
 
-    private protected override void WriteInput(byte code) => WriteVcp(VcpCode.InputSource, code);
+    protected override void WriteInput(byte code) => WriteVcp(VcpCode.InputSource, code);
 
-    private protected override void WriteVolume(int percent) => WriteVcp(VcpCode.AudioVolume, ToRaw(percent, _volumeMax));
+    protected override void WriteVolume(int percent) => WriteVcp(VcpCode.AudioVolume, ToRaw(percent, _volumeMax));
 
     private VcpReply? ReadVcpNow(byte code)
     {

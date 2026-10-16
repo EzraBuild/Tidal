@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <AssemblyName>Tidal</AssemblyName>
@@ -24,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tidal.Core\Tidal.Core.csproj" />
+    <ProjectReference Include="..\Tidal.Windows\Tidal.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>
