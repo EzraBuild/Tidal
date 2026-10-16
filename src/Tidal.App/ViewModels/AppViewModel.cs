@@ -4,17 +4,21 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace Tidal.App.ViewModels;
 
 /// <summary>
-/// What the tray popup and the Settings window show: the displays, adaptive brightness, app presets
-/// and the shortcuts, plus the Settings tabs (one per display, then Adaptive, Apps and Shortcuts).
+/// What the tray popup and the Settings window show: the displays, adaptive brightness, app presets,
+/// the shortcuts and general options, plus the Settings tabs (one per display, then Adaptive, Apps,
+/// Shortcuts and General).
 /// </summary>
 public sealed partial class AppViewModel : ObservableObject
 {
-    public AppViewModel(DisplayListViewModel displays, AdaptiveViewModel adaptive, AppPresetsViewModel appPresets, ShortcutsViewModel shortcuts)
+    public AppViewModel(
+        DisplayListViewModel displays, AdaptiveViewModel adaptive, AppPresetsViewModel appPresets,
+        ShortcutsViewModel shortcuts, GeneralViewModel general)
     {
         Displays = displays;
         Adaptive = adaptive;
         AppPresets = appPresets;
         Shortcuts = shortcuts;
+        General = general;
         Displays.Displays.CollectionChanged += (_, _) => RebuildPages();
         RebuildPages();
     }
@@ -23,8 +27,9 @@ public sealed partial class AppViewModel : ObservableObject
     public AdaptiveViewModel Adaptive { get; }
     public AppPresetsViewModel AppPresets { get; }
     public ShortcutsViewModel Shortcuts { get; }
+    public GeneralViewModel General { get; }
 
-    /// <summary>Settings tabs: DisplayViewModel per display, then Adaptive, AppPresets and Shortcuts.</summary>
+    /// <summary>Settings tabs: DisplayViewModel per display, then Adaptive, AppPresets, Shortcuts and General.</summary>
     public ObservableCollection<object> Pages { get; } = [];
 
     [ObservableProperty]
@@ -36,6 +41,7 @@ public sealed partial class AppViewModel : ObservableObject
     partial void OnSelectedPageChanged(object? value)
     {
         if (!_rebuilding && value is not null) _userChoseTab = true;
+        if (value is GeneralViewModel general) general.Refresh(); // start with Windows can change outside Tidal
     }
 
     private void RebuildPages()
@@ -53,6 +59,7 @@ public sealed partial class AppViewModel : ObservableObject
             Pages.Add(Adaptive);
             Pages.Add(AppPresets);
             Pages.Add(Shortcuts);
+            Pages.Add(General);
 
             object? kept = _userChoseTab
                 ? selectedOther ?? Displays.Displays.FirstOrDefault(d => d.Id == selectedId)

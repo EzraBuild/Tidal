@@ -10,6 +10,7 @@ using Tidal.App.Themes;
 using Tidal.App.Tray;
 using Tidal.App.ViewModels;
 using Tidal.Core.Settings;
+using Tidal.Core.Startup;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using static Tidal.App.Interop.NativeMethods;
@@ -68,7 +69,7 @@ public partial class App : Application
             _settings.ScheduleSave();
             _appPresetService.ScheduleApply();
         });
-        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts);
+        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts, new GeneralViewModel());
 
         _popup = new TrayPopup(_app);
         _popup.SettingsRequested += (_, _) => OpenSettings();
@@ -82,8 +83,8 @@ public partial class App : Application
 
         await _displays.RefreshAsync();
 
-        // Launched by hand: show where Tidal went. "Start with Windows" will pass --background.
-        if (!e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase)) ShowPopup();
+        // Launched by hand: show where Tidal went. Started with Windows, stay in the tray.
+        if (!e.Args.Contains(StartupCommand.BackgroundArgument, StringComparer.OrdinalIgnoreCase)) ShowPopup();
     }
 
     protected override void OnExit(ExitEventArgs e)

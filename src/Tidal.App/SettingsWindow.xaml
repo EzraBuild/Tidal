@@ -388,6 +388,57 @@
                 </UniformGrid>
             </StackPanel>
         </DataTemplate>
+
+        <!-- ================= General ================= -->
+        <DataTemplate DataType="{x:Type vm:GeneralViewModel}">
+            <StackPanel Margin="48,32,48,40" MaxWidth="880">
+                <TextBlock Text="GENERAL" Style="{StaticResource LeftEyebrow}" />
+                <TextBlock Text="Ready when you sign in." Style="{StaticResource PageTitleText}" />
+                <TextBlock Margin="0,8,0,20" MaxWidth="600" HorizontalAlignment="Left" Style="{StaticResource TidalCaption}"
+                           Text="Tidal lives in the notification area. Start it with Windows and your shortcuts, adaptive brightness and app presets work from the moment you sign in." />
+
+                <Border Style="{StaticResource TidalPanel}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="START WITH WINDOWS" Style="{StaticResource LeftEyebrow}" />
+                            <TextBlock Margin="0,8,0,0" Style="{StaticResource TidalCaption}" TextWrapping="Wrap"
+                                       Text="Starts in the tray when you sign in, without opening the popup." />
+                            <TextBlock Margin="0,8,0,0" Style="{StaticResource TidalCaption}" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TidalWarningBrush}"
+                                       Visibility="{Binding IsTurnedOffByWindows, Converter={StaticResource BoolToVisibility}}"
+                                       Text="Turned off in Windows' Startup apps (Settings or Task Manager). Turning it on here turns it back on." />
+                            <TextBlock Text="{Binding StartupError}" Style="{StaticResource ErrorText}" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding StartWithWindows}"
+                                         AutomationProperties.Name="Start with Windows" />
+                    </Grid>
+                </Border>
+
+                <UniformGrid Columns="2" Margin="0,-1,0,0">
+                    <Border Style="{StaticResource TidalPanel}">
+                        <StackPanel>
+                            <TextBlock Text="VERSION" Style="{StaticResource LeftEyebrow}" />
+                            <TextBlock Margin="0,10,0,0" Text="{Binding Version}" FontFamily="{StaticResource TidalMonoFont}"
+                                       FontSize="22" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource TidalPanel}" Margin="-1,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="SETTINGS FILE" Style="{StaticResource LeftEyebrow}" />
+                            <TextBlock Margin="0,10,0,0" Text="{Binding SettingsPath}" ToolTip="{Binding SettingsPath}"
+                                       FontFamily="{StaticResource TidalMonoFont}" FontSize="11"
+                                       Foreground="{DynamicResource TidalMutedBrush}" TextTrimming="CharacterEllipsis" />
+                            <Button Margin="0,10,0,0" HorizontalAlignment="Left" Style="{StaticResource TidalChipButton}"
+                                    Content="Show in File Explorer" Command="{Binding ShowSettingsFileCommand}" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </StackPanel>
+        </DataTemplate>
     </ui:FluentWindow.Resources>
 
     <Grid>
