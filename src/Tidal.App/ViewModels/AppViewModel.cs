@@ -4,15 +4,16 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace Tidal.App.ViewModels;
 
 /// <summary>
-/// What the tray popup and the Settings window show: the displays, adaptive brightness and the
-/// shortcuts, plus the Settings tabs (one per display, then Adaptive and Shortcuts).
+/// What the tray popup and the Settings window show: the displays, adaptive brightness, app presets
+/// and the shortcuts, plus the Settings tabs (one per display, then Adaptive, Apps and Shortcuts).
 /// </summary>
 public sealed partial class AppViewModel : ObservableObject
 {
-    public AppViewModel(DisplayListViewModel displays, AdaptiveViewModel adaptive, ShortcutsViewModel shortcuts)
+    public AppViewModel(DisplayListViewModel displays, AdaptiveViewModel adaptive, AppPresetsViewModel appPresets, ShortcutsViewModel shortcuts)
     {
         Displays = displays;
         Adaptive = adaptive;
+        AppPresets = appPresets;
         Shortcuts = shortcuts;
         Displays.Displays.CollectionChanged += (_, _) => RebuildPages();
         RebuildPages();
@@ -20,9 +21,10 @@ public sealed partial class AppViewModel : ObservableObject
 
     public DisplayListViewModel Displays { get; }
     public AdaptiveViewModel Adaptive { get; }
+    public AppPresetsViewModel AppPresets { get; }
     public ShortcutsViewModel Shortcuts { get; }
 
-    /// <summary>Settings tabs: DisplayViewModel per display, then AdaptiveViewModel and ShortcutsViewModel.</summary>
+    /// <summary>Settings tabs: DisplayViewModel per display, then Adaptive, AppPresets and Shortcuts.</summary>
     public ObservableCollection<object> Pages { get; } = [];
 
     [ObservableProperty]
@@ -49,6 +51,7 @@ public sealed partial class AppViewModel : ObservableObject
             Pages.Clear();
             foreach (var display in Displays.Displays) Pages.Add(display);
             Pages.Add(Adaptive);
+            Pages.Add(AppPresets);
             Pages.Add(Shortcuts);
 
             object? kept = _userChoseTab

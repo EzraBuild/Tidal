@@ -84,13 +84,24 @@
                             <Grid>
                                 <StackPanel Margin="16,14,16,14">
                                     <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" Margin="0,0,64,0" />
-                                        <Border Style="{StaticResource TidalTag}" HorizontalAlignment="Right"
-                                                ToolTip="Adaptive brightness is adjusting this display"
-                                                Visibility="{Binding IsFollowingAdaptive, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Text="AUTO" />
-                                        </Border>
+                                                   TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <Border Style="{StaticResource TidalTag}"
+                                                    ToolTip="Adaptive brightness is adjusting this display"
+                                                    Visibility="{Binding IsFollowingAdaptive, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="AUTO" />
+                                            </Border>
+                                            <!-- An app preset is holding this display while its app is in front. -->
+                                            <Border Style="{StaticResource TidalTag}" ToolTip="{Binding AppPresetToolTip}"
+                                                    Visibility="{Binding HasAppPreset, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="{Binding AppPresetName}" MaxWidth="140" TextTrimming="CharacterEllipsis" />
+                                            </Border>
+                                        </StackPanel>
                                     </Grid>
 
                                     <!-- Minimum before Value, so a value below zero is never clipped to the default minimum. -->

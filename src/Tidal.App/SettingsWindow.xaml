@@ -6,6 +6,7 @@
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  xmlns:vm="clr-namespace:Tidal.App.ViewModels"
                  xmlns:controls="clr-namespace:Tidal.App.Controls"
+                 xmlns:behaviors="clr-namespace:Tidal.App.Behaviors"
                  mc:Ignorable="d"
                  d:DataContext="{d:DesignInstance Type=vm:AppViewModel}"
                  Title="Tidal Settings"
@@ -272,6 +273,68 @@
         </DataTemplate>
 
         <!-- ================= Shortcuts ================= -->
+        <!-- ================= App presets ================= -->
+        <DataTemplate DataType="{x:Type vm:AppPresetsViewModel}">
+            <StackPanel Margin="48,32,48,40" MaxWidth="880">
+                <TextBlock Text="APP PRESETS" Style="{StaticResource LeftEyebrow}" />
+                <TextBlock Text="A brightness for each app." Style="{StaticResource PageTitleText}" />
+                <TextBlock Margin="0,8,0,20" MaxWidth="620" HorizontalAlignment="Left" Style="{StaticResource TidalCaption}"
+                           Text="While an app on this list is in front, the display showing it switches to the app's brightness, and goes back when you switch to something else. With Link all on, every display follows. 100 is each display's highest, 0 its lowest." />
+
+                <Border Style="{StaticResource TidalPanel}" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource TidalCaption}" TextWrapping="Wrap"
+                               Text="No apps yet. Add your video player to watch at full brightness, a game, or anything you want brighter or dimmer than usual." />
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Presets}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:AppPresetViewModel}">
+                            <Border Style="{StaticResource TidalPanel}" Margin="0,-1,0,0" Padding="16,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="280" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Width="32" Height="32" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <Border BorderThickness="1" BorderBrush="{DynamicResource TidalBorderBrush}"
+                                                Visibility="{Binding HasIcon, Converter={StaticResource InverseBoolToVisibility}}">
+                                            <ui:SymbolIcon Symbol="Apps20" FontSize="16" Foreground="{DynamicResource TidalMutedBrush}" />
+                                        </Border>
+                                        <Image Source="{Binding Icon}" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </Grid>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding App}" Margin="0,2,0,0" FontFamily="{StaticResource TidalMonoFont}" FontSize="11"
+                                                   Foreground="{DynamicResource TidalMutedBrush}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <Slider Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource TidalSlider}"
+                                            behaviors:SliderWheel.Step="5" Value="{Binding Brightness}"
+                                            ToolTip="Brightness while this app is in front"
+                                            AutomationProperties.Name="{Binding Name, StringFormat={}{0} brightness}" />
+                                    <Button Grid.Column="3" Margin="12,0,0,0" Padding="8" Style="{StaticResource TidalChipButton}"
+                                            Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" ToolTip="Remove"
+                                            AutomationProperties.Name="{Binding Name, StringFormat=Remove {0}}">
+                                        <ui:SymbolIcon Symbol="Dismiss16" FontSize="13" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button Margin="0,16,0,0" HorizontalAlignment="Left" Style="{StaticResource TidalPrimaryButton}" Click="OnAddAppClick"
+                        AutomationProperties.Name="Add app">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Add16" FontSize="13" />
+                        <TextBlock Text="Add app" Margin="6,0,0,0" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:ShortcutsViewModel}">
             <StackPanel Margin="48,32,48,40" MaxWidth="880">
                 <TextBlock Text="SHORTCUTS" Style="{StaticResource LeftEyebrow}" />

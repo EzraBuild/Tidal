@@ -16,13 +16,14 @@ public sealed class InverseBoolToVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>Title of a Settings tab: the display's name, "Adaptive" or "Shortcuts".</summary>
+/// <summary>Title of a Settings tab: the display's name, "Adaptive", "Apps" or "Shortcuts".</summary>
 public sealed class PageTitleConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object? parameter, CultureInfo culture) => value switch
     {
         DisplayViewModel display => display.Name,
         AdaptiveViewModel => "Adaptive",
+        AppPresetsViewModel => "Apps",
         ShortcutsViewModel => "Shortcuts",
         _ => "",
     };
@@ -39,6 +40,7 @@ public sealed class PageIconConverter : IValueConverter
         DisplayViewModel { IsInternal: true } => SymbolRegular.Laptop20,
         DisplayViewModel => SymbolRegular.Desktop20,
         AdaptiveViewModel => SymbolRegular.WeatherSunny20,
+        AppPresetsViewModel => SymbolRegular.Apps20,
         ShortcutsViewModel => SymbolRegular.Keyboard20,
         _ => SymbolRegular.Empty,
     };

@@ -91,6 +91,18 @@ internal struct WNDCLASSEX
     public IntPtr hIconSm;
 }
 
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+internal struct SHFILEINFO
+{
+    public IntPtr hIcon;
+    public int iIcon;
+    public uint dwAttributes;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+    public string szDisplayName;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+    public string szTypeName;
+}
+
 /// <summary>Screen edge the taskbar is docked to (values match ABE_*).</summary>
 internal enum TaskbarEdge
 {
@@ -258,6 +270,46 @@ internal static class NativeMethods
 
     [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true)]
     public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+    // App presets: which program owns the window in front, and where it is.
+
+    public const uint EVENT_SYSTEM_MOVESIZEEND = 0x000B;
+    public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+    public const uint SHGFI_ICON = 0x000000100;
+    public const uint SHGFI_LARGEICON = 0x000000000;
+
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    [DllImport("user32.dll", EntryPoint = "GetClassNameW", CharSet = CharSet.Unicode)]
+    public static extern int GetClassName(IntPtr hWnd, char[] className, int maxCount);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowsProc callback, IntPtr lParam);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inheritHandle, uint processId);
+
+    [DllImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool QueryFullProcessImageName(IntPtr process, uint flags, char[] path, ref int size);
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW", CharSet = CharSet.Unicode)]
+    public static extern IntPtr SHGetFileInfo(string path, uint attributes, ref SHFILEINFO info, uint size, uint flags);
 
     /// <summary>Effective DPI of the monitor (96 = 100% scaling).</summary>
     public static uint GetMonitorDpi(IntPtr monitor)

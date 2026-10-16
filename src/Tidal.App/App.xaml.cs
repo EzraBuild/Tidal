@@ -28,6 +28,7 @@ public partial class App : Application
     private SettingsService? _settings;
     private DisplayListViewModel? _displays;
     private DimmingService? _dimming;
+    private AppPresetService? _appPresetService;
     private AdaptiveViewModel? _adaptive;
     private ShortcutsViewModel? _shortcuts;
     private AppViewModel? _app;
@@ -61,7 +62,13 @@ public partial class App : Application
         _hotkeys = new HotkeyManager();
         _hotkeys.Pressed += OnHotkeyPressed;
         _shortcuts = new ShortcutsViewModel(_settings.Current.Hotkeys, _hotkeys, _settings.ScheduleSave);
-        _app = new AppViewModel(_displays, _adaptive, _shortcuts);
+        _appPresetService = new AppPresetService(_settings, _displays);
+        var appPresets = new AppPresetsViewModel(_settings.Current, () =>
+        {
+            _settings.ScheduleSave();
+            _appPresetService.ScheduleApply();
+        });
+        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts);
 
         _popup = new TrayPopup(_app);
         _popup.SettingsRequested += (_, _) => OpenSettings();
@@ -81,6 +88,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _appPresetService?.Dispose(); // puts displays held by an app preset back, before saving
         _settings?.SaveNow();
         _hotkeys?.Dispose();
         _trayIcon?.Dispose();

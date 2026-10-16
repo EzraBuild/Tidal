@@ -188,7 +188,42 @@ public sealed partial class DisplayViewModel : ObservableObject
     public bool HasAdaptiveOffset => _adaptiveLevel is not null && Math.Abs(_settings.AdaptiveOffset) >= 0.005;
 
     /// <summary>True while adaptive brightness is driving this display.</summary>
-    public bool IsFollowingAdaptive => _adaptiveLevel is not null;
+    public bool IsFollowingAdaptive => _adaptiveLevel is not null && AppPresetName is null;
+
+    /// <summary>The app whose preset sets this display's brightness right now, or null.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAppPreset), nameof(IsFollowingAdaptive), nameof(AppPresetToolTip))]
+    private string? _appPresetName;
+
+    public bool HasAppPreset => AppPresetName is not null;
+
+    public string? AppPresetToolTip => AppPresetName is null ? null : $"Brightness set for {AppPresetName}; it goes back when you switch apps";
+
+    private double _appPresetLevel;
+
+    /// <summary>
+    /// Holds the display at an app's preset (<paramref name="fraction"/> of its range) while that app
+    /// is in front. Adaptive brightness waits, and changes made meanwhile don't become adaptive offsets.
+    /// </summary>
+    public void HoldForAppPreset(string appName, double fraction)
+    {
+        if (AppPresetName == appName && _appPresetLevel == fraction) return; // already there; keep any nudge the user made
+        AppPresetName = appName;
+        _appPresetLevel = fraction;
+        SetBrightnessQuietly(Range.FromFraction(fraction));
+    }
+
+    /// <summary>
+    /// The preset's app is no longer in front: back to adaptive brightness if it drives this display,
+    /// otherwise to <paramref name="previous"/>, the brightness from before the preset.
+    /// </summary>
+    public void ReleaseAppPreset(int previous)
+    {
+        if (AppPresetName is null) return;
+        AppPresetName = null;
+        if (_adaptiveLevel is double level) ApplyAdaptiveLevel(level);
+        else SetBrightnessQuietly(Range.Clamp(previous));
+    }
 
     /// <summary>
     /// Sets brightness to <paramref name="fraction"/> of the way between this display's limits, as
@@ -213,7 +248,7 @@ public sealed partial class DisplayViewModel : ObservableObject
 
         // Any change that didn't come from adaptive brightness (slider, hotkey, Link all, a new
         // limit) becomes the user's offset, so the next adaptive update keeps it.
-        if (!_applyingAdaptive && _adaptiveLevel is double adaptive)
+        if (!_applyingAdaptive && AppPresetName is null && _adaptiveLevel is double adaptive)
         {
             _settings.AdaptiveOffset = Math.Clamp(Range.ToFraction(percent) - adaptive, -DisplaySettings.MaxAdaptiveOffset, DisplaySettings.MaxAdaptiveOffset);
             _settingsChanged();
@@ -292,6 +327,7 @@ public sealed partial class DisplayViewModel : ObservableObject
         bool wasFollowing = _adaptiveLevel is not null;
         _adaptiveLevel = level;
         if (!wasFollowing) OnAdaptiveOffsetChanged();
+        if (AppPresetName is not null) return; // an app preset holds the display; the level applies when it lets go
 
         _applyingAdaptive = true;
         try
