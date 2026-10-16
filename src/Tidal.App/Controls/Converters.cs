@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
-using Tidal.App.ViewModels;
+using Tidal.ViewModels;
 using Wpf.Ui.Controls;
 
 namespace Tidal.App.Controls;

@@ -1,37 +1,31 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Tidal.App.Interop;
 using Tidal.Core.Settings;
+using Tidal.ViewModels.Platform;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 /// <summary>A running app that could get a preset, for the "Add app" menu.</summary>
-public sealed record RunningApp(string Path, string Name, ImageSource? Icon);
+/// <param name="Icon">An image the UI framework can show (see <see cref="IAppCatalog.GetIcon"/>), or null.</param>
+public sealed record RunningApp(string Path, string Name, object? Icon);
 
 /// <summary>
-/// The Apps tab: a brightness for particular apps, used while that app is in front (see
-/// <see cref="Services.AppPresetService"/>).
+/// The Apps tab: a brightness for particular apps, used while that app is in front. Watching which
+/// app is in front is up to each platform's app (on Windows, AppPresetService).
 /// </summary>
 public sealed partial class AppPresetsViewModel : ObservableObject
 {
-    // Processes with windows that aren't apps a preset would make sense for.
-    private static readonly HashSet<string> NotApps = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "ApplicationFrameHost.exe", "TextInputHost.exe", "SystemSettings.exe", "ShellExperienceHost.exe",
-        "StartMenuExperienceHost.exe", "SearchHost.exe", "LockApp.exe",
-    };
-
     private readonly TidalSettings _settings;
+    private readonly IAppCatalog _catalog;
     private readonly Action _changed;
 
-    public AppPresetsViewModel(TidalSettings settings, Action changed)
+    public AppPresetsViewModel(TidalSettings settings, IAppCatalog catalog, Action changed)
     {
         _settings = settings;
+        _catalog = catalog;
         _changed = changed;
-        foreach (var preset in settings.AppPresets) Presets.Add(new AppPresetViewModel(preset, changed));
+        foreach (var preset in settings.AppPresets) Presets.Add(CreateViewModel(preset));
         Presets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
     }
 
@@ -46,11 +40,11 @@ public sealed partial class AppPresetsViewModel : ObservableObject
         var preset = new AppPreset
         {
             App = AppPreset.ProgramName(programPath),
-            Name = ProgramInfo.GetDisplayName(programPath),
+            Name = _catalog.GetDisplayName(programPath),
             Path = programPath,
         };
         _settings.AppPresets.Add(preset);
-        Presets.Add(new AppPresetViewModel(preset, _changed));
+        Presets.Add(CreateViewModel(preset));
         _changed();
     }
 
@@ -69,28 +63,17 @@ public sealed partial class AppPresetsViewModel : ObservableObject
     public IReadOnlyList<RunningApp> FindRunningApps()
     {
         var apps = new Dictionary<string, RunningApp>(StringComparer.OrdinalIgnoreCase);
-        foreach (var process in Process.GetProcesses())
+        foreach (string path in _catalog.FindRunningPrograms())
         {
-            using (process)
-            {
-                try
-                {
-                    if (process.Id == Environment.ProcessId || process.MainWindowHandle == IntPtr.Zero
-                        || string.IsNullOrWhiteSpace(process.MainWindowTitle)) continue;
-                    string? path = ProgramInfo.GetProgramPath((uint)process.Id);
-                    if (path is null) continue;
-                    string program = AppPreset.ProgramName(path);
-                    if (NotApps.Contains(program) || apps.ContainsKey(program) || _settings.FindAppPreset(path) is not null) continue;
-                    apps[program] = new RunningApp(path, ProgramInfo.GetDisplayName(path), ProgramInfo.GetIcon(path));
-                }
-                catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
-                {
-                    // The process exited while we looked at it.
-                }
-            }
+            string program = AppPreset.ProgramName(path);
+            if (apps.ContainsKey(program) || _settings.FindAppPreset(path) is not null) continue;
+            apps[program] = new RunningApp(path, _catalog.GetDisplayName(path), _catalog.GetIcon(path));
         }
         return apps.Values.OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
+
+    private AppPresetViewModel CreateViewModel(AppPreset preset)
+        => new(preset, preset.Path is { } path ? _catalog.GetIcon(path) : null, _changed);
 }
 
 /// <summary>One app's preset in Settings.</summary>
@@ -98,17 +81,17 @@ public sealed partial class AppPresetViewModel : ObservableObject
 {
     private readonly Action _changed;
 
-    public AppPresetViewModel(AppPreset preset, Action changed)
+    public AppPresetViewModel(AppPreset preset, object? icon, Action changed)
     {
         Preset = preset;
+        Icon = icon;
         _changed = changed;
-        Icon = ProgramInfo.GetIcon(preset.Path);
     }
 
     public AppPreset Preset { get; }
     public string Name => Preset.DisplayName;
     public string App => Preset.App;
-    public ImageSource? Icon { get; }
+    public object? Icon { get; }
     public bool HasIcon => Icon is not null;
 
     /// <summary>Brightness while the app is in front, in percent of each display's range.</summary>

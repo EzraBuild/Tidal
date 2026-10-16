@@ -1,5 +1,6 @@
 using System.Windows.Interop;
 using Tidal.Core.Hotkeys;
+using Tidal.ViewModels.Platform;
 using static Tidal.App.Interop.NativeMethods;
 
 namespace Tidal.App.Services;
@@ -8,7 +9,7 @@ namespace Tidal.App.Services;
 /// System-wide keyboard shortcuts via RegisterHotKey. Holding a shortcut down repeats it, which is
 /// what brightness keys should do.
 /// </summary>
-internal sealed class HotkeyManager : IDisposable
+internal sealed class HotkeyManager : IHotkeys, IDisposable
 {
     private readonly HwndSource _window;
     private readonly HashSet<int> _registered = [];

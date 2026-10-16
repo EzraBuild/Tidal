@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using Tidal.ViewModels.Platform;
 using Tidal.Windows.Startup;
 
 namespace Tidal.App.Services;
@@ -7,7 +8,7 @@ namespace Tidal.App.Services;
 /// Whether Windows starts Tidal when you sign in: a value under the current user's Run key (no
 /// admin rights needed), which Windows lists in Settings › Apps › Startup and in Task Manager.
 /// </summary>
-internal static class WindowsStartup
+internal sealed class WindowsStartup : ISignInStartup
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ApprovedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
@@ -17,10 +18,10 @@ internal static class WindowsStartup
     private static string ProgramPath => Environment.ProcessPath ?? throw new InvalidOperationException("Tidal's own path is unknown.");
 
     /// <summary>True when Windows will start this copy of Tidal at sign-in.</summary>
-    public static bool IsEnabled => IsRegistered && !IsTurnedOffByWindows;
+    public bool IsEnabled => IsRegistered && !IsTurnedOffBySystem;
 
     /// <summary>True when Tidal is registered but turned off in Windows' Startup apps (Settings or Task Manager).</summary>
-    public static bool IsTurnedOffByWindows
+    public bool IsTurnedOffBySystem
     {
         get
         {
@@ -43,7 +44,7 @@ internal static class WindowsStartup
     /// Starts this copy of Tidal, in the tray, at sign-in. Turning it on here also clears an "off"
     /// set in Windows' Startup apps, since that's what the user just asked for.
     /// </summary>
-    public static void Enable()
+    public void Enable()
     {
         using (var run = Registry.CurrentUser.CreateSubKey(RunKey))
         {
@@ -54,7 +55,7 @@ internal static class WindowsStartup
     }
 
     /// <summary>Stops Windows starting Tidal at sign-in.</summary>
-    public static void Disable()
+    public void Disable()
     {
         using (var run = Registry.CurrentUser.OpenSubKey(RunKey, writable: true))
         {

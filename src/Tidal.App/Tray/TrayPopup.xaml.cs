@@ -7,7 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Tidal.App.Interop;
-using Tidal.App.ViewModels;
+using Tidal.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using static Tidal.App.Interop.NativeMethods;

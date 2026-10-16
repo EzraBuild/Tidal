@@ -8,8 +8,9 @@ using Tidal.App.Osd;
 using Tidal.App.Services;
 using Tidal.App.Themes;
 using Tidal.App.Tray;
-using Tidal.App.ViewModels;
 using Tidal.Core.Settings;
+using Tidal.ViewModels;
+using Tidal.Windows.Displays;
 using Tidal.Windows.Startup;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
@@ -27,6 +28,7 @@ public partial class App : Application
     private readonly Dictionary<string, BrightnessOsd> _osds = [];
     private SingleInstance? _singleInstance;
     private SettingsService? _settings;
+    private WindowsDisplayWatcher? _displayWatcher;
     private DisplayListViewModel? _displays;
     private DimmingService? _dimming;
     private AppPresetService? _appPresetService;
@@ -56,22 +58,24 @@ public partial class App : Application
 
         SettingsStore.MoveLegacyFile(SettingsStore.LegacyPath, SettingsStore.DefaultPath);
         _settings = new SettingsService(new SettingsStore(SettingsStore.DefaultPath));
-        _displays = new DisplayListViewModel(_settings);
+        _displayWatcher = new WindowsDisplayWatcher();
+        _displays = new DisplayListViewModel(_settings, new WindowsDisplayDetector(), _displayWatcher);
         _displays.PropertyChanged += OnDisplaysPropertyChanged;
         _dimming = new DimmingService(_displays, OwnWindowsAboveDimming);
-        _adaptive = new AdaptiveViewModel(_settings.Current.Adaptive, _displays, _settings.ScheduleSave);
+        _adaptive = new AdaptiveViewModel(_settings.Current.Adaptive, _displays, new WindowsAdaptiveSources(), _settings.ScheduleSave);
 
         _hotkeys = new HotkeyManager();
         _hotkeys.Pressed += OnHotkeyPressed;
         _shortcuts = new ShortcutsViewModel(_settings.Current.Hotkeys, _hotkeys, _settings.ScheduleSave);
         _appPresetService = new AppPresetService(_settings, _displays);
-        var appPresets = new AppPresetsViewModel(_settings.Current, () =>
+        var appPresets = new AppPresetsViewModel(_settings.Current, new WindowsAppCatalog(), () =>
         {
             _settings.ScheduleSave();
             _appPresetService.ScheduleApply();
         });
-        _updates = new UpdatesViewModel(_settings.Current, _settings.ScheduleSave);
-        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts, new GeneralViewModel(_updates));
+        _updates = new UpdatesViewModel(_settings.Current, _settings.ScheduleSave, quit: Shutdown);
+        var general = new GeneralViewModel(_updates, new WindowsStartup(), new FileExplorer());
+        _app = new AppViewModel(_displays, _adaptive, appPresets, _shortcuts, general);
 
         _popup = new TrayPopup(_app);
         _popup.SettingsRequested += (_, _) => OpenSettings();
@@ -101,6 +105,7 @@ public partial class App : Application
         _adaptive?.Dispose();
         _dimming?.Dispose();
         _displays?.Dispose(); // flushes pending brightness writes
+        _displayWatcher?.Dispose();
         _singleInstance?.Dispose();
         base.OnExit(e);
     }

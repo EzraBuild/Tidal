@@ -4,12 +4,13 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Microsoft.Win32;
 using Tidal.App.Interop;
-using Tidal.App.ViewModels;
+using Tidal.ViewModels;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using static Tidal.App.Interop.NativeMethods;
 using Button = System.Windows.Controls.Button;
 using Image = System.Windows.Controls.Image;
+using ImageSource = System.Windows.Media.ImageSource;
 using MenuItem = System.Windows.Controls.MenuItem;
 
 namespace Tidal.App;
@@ -68,7 +69,7 @@ public partial class SettingsWindow : FluentWindow
         foreach (var app in apps)
         {
             var item = new MenuItem { Header = app.Name, ToolTip = app.Path };
-            if (app.Icon is not null) item.Icon = new Image { Source = app.Icon, Width = 16, Height = 16 };
+            if (app.Icon is ImageSource icon) item.Icon = new Image { Source = icon, Width = 16, Height = 16 };
             item.Click += (_, _) => presets.Add(app.Path);
             menu.Items.Add(item);
         }

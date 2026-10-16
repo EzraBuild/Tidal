@@ -1,9 +1,7 @@
-using System.Diagnostics;
-using System.IO;
-using System.Windows.Threading;
+using Tidal.Core;
 using Tidal.Core.Settings;
 
-namespace Tidal.App.Services;
+namespace Tidal.ViewModels;
 
 /// <summary>Holds the live settings and writes them to disk shortly after they change.</summary>
 public sealed class SettingsService
@@ -12,23 +10,18 @@ public sealed class SettingsService
     private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(750);
 
     private readonly SettingsStore _store;
-    private readonly DispatcherTimer _saveTimer;
+    private readonly UiTimer _saveTimer;
 
     public SettingsService(SettingsStore store)
     {
         _store = store;
         Current = store.Load();
-        _saveTimer = new DispatcherTimer { Interval = SaveDelay };
-        _saveTimer.Tick += (_, _) => SaveNow();
+        _saveTimer = new UiTimer(SaveNow);
     }
 
     public TidalSettings Current { get; }
 
-    public void ScheduleSave()
-    {
-        _saveTimer.Stop();
-        _saveTimer.Start();
-    }
+    public void ScheduleSave() => _saveTimer.Start(SaveDelay);
 
     public void SaveNow()
     {
@@ -39,7 +32,7 @@ public sealed class SettingsService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Debug.WriteLine($"[Tidal] Saving settings failed: {ex.Message}");
+            Log.Warning($"Saving settings failed: {ex.Message}");
         }
     }
 }

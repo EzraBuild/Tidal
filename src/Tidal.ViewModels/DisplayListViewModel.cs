@@ -1,15 +1,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
-using Tidal.App.Services;
 using Tidal.Core.Displays;
-using Tidal.Windows.Displays;
+using Tidal.ViewModels.Platform;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 /// <summary>
 /// The connected displays, shared by the tray popup and the Displays window. Re-detects them when
@@ -17,35 +14,34 @@ namespace Tidal.App.ViewModels;
 /// </summary>
 public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
 {
-    // Windows fires several display-change events per plug/unplug, and monitors need a moment
+    // Systems fire several display-change events per plug/unplug, and monitors need a moment
     // before they answer DDC/CI, so detection waits for things to settle.
     private static readonly TimeSpan DisplayChangeSettleTime = TimeSpan.FromSeconds(1.5);
     private static readonly TimeSpan ResumeSettleTime = TimeSpan.FromSeconds(4);
 
-    private readonly DisplayManager _manager = new(new WindowsDisplayDetector());
+    private readonly DisplayManager _manager;
     private readonly SettingsService _settings;
-    private readonly DispatcherTimer _redetectTimer;
+    private readonly IDisplayWatcher _watcher;
+    private readonly SynchronizationContext _ui = UiThread.Capture();
+    private readonly UiTimer _redetectTimer;
     private bool _refreshRequestedWhileBusy;
 
-    public DisplayListViewModel(SettingsService settings)
+    public DisplayListViewModel(SettingsService settings, IDisplayDetector detector, IDisplayWatcher watcher)
     {
         _settings = settings;
+        _manager = new DisplayManager(detector);
+        _watcher = watcher;
         LinkAll = settings.Current.LinkAll;
 
-        _redetectTimer = new DispatcherTimer { Interval = DisplayChangeSettleTime };
-        _redetectTimer.Tick += async (_, _) =>
-        {
-            _redetectTimer.Stop();
-            await RefreshAsync();
-        };
+        _redetectTimer = new UiTimer(() => _ = RefreshAsync());
         Displays.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(EmptyMessage));
             OnPropertyChanged(nameof(Summary));
         };
 
-        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
-        SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        _watcher.DisplaysChanged += OnDisplaysChanged;
+        _watcher.Resumed += OnResumed;
     }
 
     public ObservableCollection<DisplayViewModel> Displays { get; } = [];
@@ -232,25 +228,18 @@ public sealed partial class DisplayListViewModel : ObservableObject, IDisposable
         if (e.PropertyName == nameof(DisplayViewModel.Brightness)) OnPropertyChanged(nameof(Summary));
     }
 
-    private void OnDisplaySettingsChanged(object? sender, EventArgs e) => ScheduleRedetect(DisplayChangeSettleTime);
+    private void OnDisplaysChanged(object? sender, EventArgs e) => ScheduleRedetect(DisplayChangeSettleTime);
 
-    private void OnPowerModeChanged(object? sender, PowerModeChangedEventArgs e)
-    {
-        if (e.Mode == PowerModes.Resume) ScheduleRedetect(ResumeSettleTime);
-    }
+    private void OnResumed(object? sender, EventArgs e) => ScheduleRedetect(ResumeSettleTime);
 
-    private void ScheduleRedetect(TimeSpan delay) => _redetectTimer.Dispatcher.InvokeAsync(() =>
-    {
-        _redetectTimer.Stop();
-        _redetectTimer.Interval = delay;
-        _redetectTimer.Start();
-    });
+    // The watcher raises its events on other threads.
+    private void ScheduleRedetect(TimeSpan delay) => _ui.Post(_ => _redetectTimer.Start(delay), null);
 
     public void Dispose()
     {
-        SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
-        SystemEvents.PowerModeChanged -= OnPowerModeChanged;
-        _redetectTimer.Stop();
+        _watcher.DisplaysChanged -= OnDisplaysChanged;
+        _watcher.Resumed -= OnResumed;
+        _redetectTimer.Dispose();
         foreach (var display in Displays) Untrack(display);
         _manager.Dispose(); // flushes any pending brightness writes
     }

@@ -1,13 +1,10 @@
-using System.Runtime.InteropServices;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Tidal.Core.Adaptive;
 using Tidal.Core.Settings;
-using Tidal.Windows.Adaptive;
-using Windows.Devices.Geolocation;
+using Tidal.ViewModels.Platform;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 /// <summary>
 /// Adaptive brightness: which source adaptive displays follow (the sun, the built-in screen or the
@@ -17,16 +14,19 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
 {
     private readonly AdaptiveSettings _settings;
     private readonly DisplayListViewModel _displays;
+    private readonly IAdaptiveSources _sources;
     private readonly Action _settingsChanged;
+    private readonly SynchronizationContext _ui = UiThread.Capture();
     private BrightnessSource? _source;
 
-    internal AdaptiveViewModel(AdaptiveSettings settings, DisplayListViewModel displays, Action settingsChanged)
+    public AdaptiveViewModel(AdaptiveSettings settings, DisplayListViewModel displays, IAdaptiveSources sources, Action settingsChanged)
     {
         _settings = settings;
         _displays = displays;
+        _sources = sources;
         _settingsChanged = settingsChanged;
-        IsBuiltInAvailable = WmiBuiltInDisplaySource.IsAvailable;
-        IsSensorAvailable = WindowsLightSensorSource.IsAvailable;
+        IsBuiltInAvailable = sources.HasBuiltInDisplay;
+        IsSensorAvailable = sources.HasLightSensor;
 
         // Re-detected displays and newly switched-on displays pick up the current level at once.
         _displays.Displays.CollectionChanged += (_, _) => ApplyLevel();
@@ -38,8 +38,8 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
     public bool IsSensorAvailable { get; }
 
     public string BuiltInDescription => IsBuiltInAvailable
-        ? "External displays follow the laptop screen, including Windows' own brightness changes."
-        : "Not available: this PC has no built-in screen whose brightness Windows reports.";
+        ? "External displays follow the laptop screen, however its brightness changes."
+        : "Not available: this PC has no built-in screen with brightness Tidal can read.";
 
     public string SensorDescription => IsSensorAvailable
         ? "Brighter in a bright room, dimmer in the dark."
@@ -104,7 +104,7 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(UseMyLocationCommand))]
     private bool _isLocating;
 
-    /// <summary>Asks Windows for the PC's location. Rounded to about a kilometre, which is plenty for sunrise times.</summary>
+    /// <summary>Asks the system where the PC is. Rounded to about a kilometre, which is plenty for sunrise times.</summary>
     [RelayCommand(CanExecute = nameof(CanUseMyLocation))]
     private async Task UseMyLocationAsync()
     {
@@ -112,19 +112,12 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
         IsLocating = true;
         try
         {
-            if (await Geolocator.RequestAccessAsync() != GeolocationAccessStatus.Allowed)
-            {
-                LocationError = "Windows location access is off for desktop apps. Turn it on in Settings › Privacy & security › Location, or type your coordinates.";
-                return;
-            }
-            var locator = new Geolocator { DesiredAccuracy = PositionAccuracy.Default };
-            var position = await locator.GetGeopositionAsync(TimeSpan.FromHours(1), TimeSpan.FromSeconds(15));
-            var point = position.Coordinate.Point.Position;
+            var point = await _sources.LocateAsync();
             SetLocation(Math.Round(point.Latitude, 2), Math.Round(point.Longitude, 2));
         }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or TaskCanceledException or COMException)
+        catch (LocationException ex)
         {
-            LocationError = "Windows couldn't find a location. Type your coordinates instead.";
+            LocationError = ex.Message;
         }
         finally
         {
@@ -160,8 +153,8 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
         _source = Mode switch
         {
             AdaptiveMode.Sun when _settings is { Latitude: double lat, Longitude: double lon } => new SunSource(lat, lon),
-            AdaptiveMode.BuiltInDisplay when IsBuiltInAvailable => new WmiBuiltInDisplaySource(),
-            AdaptiveMode.LightSensor when IsSensorAvailable => new WindowsLightSensorSource(),
+            AdaptiveMode.BuiltInDisplay when IsBuiltInAvailable => _sources.CreateBuiltInDisplaySource(),
+            AdaptiveMode.LightSensor when IsSensorAvailable => _sources.CreateLightSensorSource(),
             _ => null,
         };
 
@@ -177,7 +170,7 @@ public sealed partial class AdaptiveViewModel : ObservableObject, IDisposable
     }
 
     // Sources report from background threads.
-    private void OnLevelChanged(object? sender, EventArgs e) => Application.Current?.Dispatcher.InvokeAsync(ApplyLevel);
+    private void OnLevelChanged(object? sender, EventArgs e) => _ui.Post(_ => ApplyLevel(), null);
 
     private void ApplyLevel()
     {

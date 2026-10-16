@@ -1,13 +1,11 @@
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Tidal.Core;
 using Tidal.Core.Settings;
 using Velopack;
 using Velopack.Sources;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 /// <summary>
 /// Keeps an installed Tidal up to date from its GitHub releases: checks a minute after starting and
@@ -24,20 +22,19 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
 
     private readonly TidalSettings _settings;
     private readonly Action _settingsChanged;
+    private readonly Action _quit;
     private readonly UpdateManager? _manager;
-    private readonly DispatcherTimer _timer;
+    private readonly SynchronizationContext _ui = UiThread.Capture();
+    private readonly UiTimer _timer;
     private VelopackAsset? _ready;
 
-    public UpdatesViewModel(TidalSettings settings, Action settingsChanged)
+    /// <param name="quit">Quits Tidal, for restarting into a new version.</param>
+    public UpdatesViewModel(TidalSettings settings, Action settingsChanged, Action quit)
     {
         _settings = settings;
         _settingsChanged = settingsChanged;
-        _timer = new DispatcherTimer { Interval = FirstCheckDelay };
-        _timer.Tick += async (_, _) =>
-        {
-            _timer.Interval = CheckInterval;
-            await CheckAsync();
-        };
+        _quit = quit;
+        _timer = new UiTimer(() => _ = CheckAsync());
 
         try
         {
@@ -49,7 +46,7 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[Tidal] Updates unavailable: {ex.Message}");
+            Log.Warning($"Updates unavailable: {ex.Message}");
         }
 
         if (_manager is null)
@@ -61,7 +58,7 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
         // Downloaded last time but not installed yet (e.g. Tidal was ended rather than quit).
         if (_manager.UpdatePendingRestart is { } pending) MarkReady(pending);
         else Status = $"Tidal {_manager.CurrentVersion}. Not checked for updates yet.";
-        if (AutoUpdate) _timer.Start();
+        if (AutoUpdate) StartTimer();
     }
 
     /// <summary>False for copies that weren't installed (e.g. a development build).</summary>
@@ -77,7 +74,7 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
             _settings.AutoUpdate = value;
             _settingsChanged();
             OnPropertyChanged();
-            if (value && CanUpdate) _timer.Start();
+            if (value && CanUpdate) StartTimer();
             else _timer.Stop();
         }
     }
@@ -109,7 +106,7 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
         if (_manager is null || _ready is null) return;
         _manager.WaitExitThenApplyUpdates(_ready, silent: true, restart: true);
         _ready = null; // the updater has it now; quitting mustn't start a second one
-        Application.Current.Shutdown();
+        _quit();
     }
 
     /// <summary>Called as Tidal quits: installs a downloaded version, without starting Tidal again.</summary>
@@ -122,7 +119,7 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[Tidal] Installing the update on exit failed: {ex.Message}");
+            Log.Warning($"Installing the update on exit failed: {ex.Message}");
         }
     }
 
@@ -142,9 +139,8 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
 
             string version = update.TargetFullRelease.Version.ToString();
             Status = $"Downloading {version}…";
-            var dispatcher = Dispatcher.CurrentDispatcher;
             await _manager.DownloadUpdatesAsync(update, percent =>
-                dispatcher.InvokeAsync(() => Status = $"Downloading {version}… {percent}%"));
+                _ui.Post(_ => Status = $"Downloading {version}… {percent}%", null));
             MarkReady(update.TargetFullRelease);
         }
         catch (Exception ex)
@@ -164,5 +160,7 @@ public sealed partial class UpdatesViewModel : ObservableObject, IDisposable
         Status = $"Tidal {ReadyVersion} is ready. Restart to update now, or it installs when Tidal quits.";
     }
 
-    public void Dispose() => _timer.Stop();
+    private void StartTimer() => _timer.Start(FirstCheckDelay, CheckInterval);
+
+    public void Dispose() => _timer.Dispose();
 }

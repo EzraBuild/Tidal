@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Tidal.App.Services;
 using Tidal.Core.Hotkeys;
 using Tidal.Core.Settings;
+using Tidal.ViewModels.Platform;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 public enum HotkeyAction
 {
@@ -14,17 +14,17 @@ public enum HotkeyAction
 /// <summary>The brightness hotkeys: which keys, how far each press goes, and which displays it moves.</summary>
 public sealed partial class ShortcutsViewModel : ObservableObject
 {
-    private const string TakenMessage = "Windows or another app is already using this shortcut.";
+    private const string TakenMessage = "Another app or the system is already using this shortcut.";
 
     private readonly HotkeySettings _settings;
-    private readonly HotkeyManager _hotkeys;
+    private readonly IHotkeys _hotkeys;
     private readonly Action _settingsChanged;
     private readonly Dictionary<HotkeyAction, string> _conflicts = [];
     private readonly HashSet<HotkeyAction> _taken = [];
     private bool _isRecordingUp;
     private bool _isRecordingDown;
 
-    internal ShortcutsViewModel(HotkeySettings settings, HotkeyManager hotkeys, Action settingsChanged)
+    public ShortcutsViewModel(HotkeySettings settings, IHotkeys hotkeys, Action settingsChanged)
     {
         _settings = settings;
         _hotkeys = hotkeys;

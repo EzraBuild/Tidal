@@ -1,12 +1,10 @@
 using System.Diagnostics;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Tidal.Core.Displays;
 using Tidal.Core.Settings;
-using Wpf.Ui.Controls;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 public sealed partial class DisplayViewModel : ObservableObject
 {
@@ -17,6 +15,7 @@ public sealed partial class DisplayViewModel : ObservableObject
     private readonly Display _display;
     private readonly DisplaySettings _settings;
     private readonly Action _settingsChanged;
+    private readonly SynchronizationContext _ui = UiThread.Capture();
     private bool _loadingFromDisplay;
     private bool _suppressEditEvent;
     private bool _applyingAdaptive;
@@ -45,7 +44,6 @@ public sealed partial class DisplayViewModel : ObservableObject
     public bool IsPrimary => _display.Info.IsPrimary;
     public bool IsInternal => _display.Info.IsInternal;
     public ScreenRect Bounds => _display.Info.Bounds;
-    public SymbolRegular Icon => _display.Info.IsInternal ? SymbolRegular.Laptop24 : SymbolRegular.Desktop24;
 
     /// <summary>How Tidal changes the brightness, for the badge on the monitor illustration.</summary>
     public string MethodLabel => !HasHardwareBrightness ? "Software dimming" : _display.Method switch
@@ -416,8 +414,8 @@ public sealed partial class DisplayViewModel : ObservableObject
         }
     }
 
-    private void OnValuesRead(object? sender, EventArgs e)
-        => Application.Current?.Dispatcher.InvokeAsync(LoadFromDisplay);
+    // Raised on the display's I/O thread.
+    private void OnValuesRead(object? sender, EventArgs e) => _ui.Post(_ => LoadFromDisplay(), null);
 
     private void LoadFromDisplay()
     {

@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Tidal.App.ViewModels;
+namespace Tidal.ViewModels;
 
 /// <summary>
 /// What the tray popup and the Settings window show: the displays, adaptive brightness, app presets,
@@ -41,7 +41,7 @@ public sealed partial class AppViewModel : ObservableObject
     partial void OnSelectedPageChanged(object? value)
     {
         if (!_rebuilding && value is not null) _userChoseTab = true;
-        if (value is GeneralViewModel general) general.Refresh(); // start with Windows can change outside Tidal
+        if (value is GeneralViewModel general) general.Refresh(); // starting at sign-in can be changed outside Tidal
     }
 
     private void RebuildPages()

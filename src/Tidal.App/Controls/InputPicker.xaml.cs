@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using Tidal.App.ViewModels;
+using Tidal.ViewModels;
 
 namespace Tidal.App.Controls;
 

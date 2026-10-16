@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows.Threading;
 using Tidal.App.Interop;
-using Tidal.App.ViewModels;
+using Tidal.ViewModels;
 using static Tidal.App.Interop.NativeMethods;
 
 namespace Tidal.App.Services;

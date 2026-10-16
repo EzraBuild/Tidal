@@ -50,19 +50,23 @@ src/Tidal.Windows      Windows hardware
   Displays/            Detection, DDC/CI and WMI backends
   Adaptive/            Built-in screen (WMI) and light sensor (WinRT) sources
   Startup/             The command Windows runs at sign-in
-src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, square, Geist fonts)
+src/Tidal.ViewModels   What the popup and Settings show and do, for any UI framework: the display
+                       list ("link all" lives here), adaptive brightness, app presets, shortcuts,
+                       updates, settings persistence
+  Platform/            What each app supplies: display change events, adaptive sources and location,
+                       hotkeys, open apps and icons, start at sign-in, the file manager
+src/Tidal.App          WPF tray app for Windows (WPF-UI controls, restyled: monochrome, square, Geist fonts)
   Tray/                Notification-area icon, the brightness popup, the logo
   Osd/                 On-screen brightness indicator for shortcuts
   Themes/              Tidal's palette (light/dark) and control styles: pill slider, chips, tabs, tiles
   Controls/            Shortcut recorder, number dial, day curve chart, mode picker
-  Services/            Global hotkeys, settings persistence, software dimming overlays, app presets,
-                       start with Windows
-  ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
+  Services/            The Windows side of Platform/, plus software dimming overlays and app presets
   Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
 tools/Tidal.Diag       Console diagnostics: what each display supports
 tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, limits and dimming below 0,
                        app presets, shortcuts, settings store, sun times, adaptive curves
-tests/Tidal.Windows.Tests  Interop struct sizes, startup command
+tests/Tidal.ViewModels.Tests  Link all, software dimming, app presets, start at sign-in, UI timer
+tests/Tidal.Windows.Tests     Interop struct sizes, startup command
 ```
 
 ### How detection works

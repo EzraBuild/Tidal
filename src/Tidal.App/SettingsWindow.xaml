@@ -4,7 +4,7 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-                 xmlns:vm="clr-namespace:Tidal.App.ViewModels"
+                 xmlns:vm="clr-namespace:Tidal.ViewModels;assembly=Tidal.ViewModels"
                  xmlns:controls="clr-namespace:Tidal.App.Controls"
                  xmlns:behaviors="clr-namespace:Tidal.App.Behaviors"
                  mc:Ignorable="d"
@@ -409,11 +409,11 @@
                                        Text="Starts in the tray when you sign in, without opening the popup." />
                             <TextBlock Margin="0,8,0,0" Style="{StaticResource TidalCaption}" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TidalWarningBrush}"
-                                       Visibility="{Binding IsTurnedOffByWindows, Converter={StaticResource BoolToVisibility}}"
+                                       Visibility="{Binding IsTurnedOffBySystem, Converter={StaticResource BoolToVisibility}}"
                                        Text="Turned off in Windows' Startup apps (Settings or Task Manager). Turning it on here turns it back on." />
                             <TextBlock Text="{Binding StartupError}" Style="{StaticResource ErrorText}" />
                         </StackPanel>
-                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding StartWithWindows}"
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding StartAtSignIn}"
                                          AutomationProperties.Name="Start with Windows" />
                     </Grid>
                 </Border>

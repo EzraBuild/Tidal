@@ -4,7 +4,7 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-                 xmlns:vm="clr-namespace:Tidal.App.ViewModels"
+                 xmlns:vm="clr-namespace:Tidal.ViewModels;assembly=Tidal.ViewModels"
                  xmlns:controls="clr-namespace:Tidal.App.Controls"
                  xmlns:behaviors="clr-namespace:Tidal.App.Behaviors"
                  mc:Ignorable="d"
