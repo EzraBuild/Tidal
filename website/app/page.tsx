@@ -92,7 +92,6 @@ const requirements = [
   "External monitors need DDC/CI, which most have (usually on in the monitor's menu)",
 ];
 
-const comingNext = ["Start with Windows"];
 
 const faq = [
   {
@@ -132,8 +131,9 @@ const faq = [
     q: "How do I open it, and how do I uninstall it?",
     a: (
       <>
-        Tidal lives in the notification area. On Windows 11, click the <strong>^</strong> arrow next to the clock and drag its icon
-        onto the taskbar to keep it handy. To remove it: Settings › Apps › Installed apps › Tidal › Uninstall.
+        Tidal starts with Windows and lives in the notification area. On Windows 11, click the <strong>^</strong> arrow next to the
+        clock and drag its icon onto the taskbar to keep it handy. You can turn off starting with Windows in Tidal&apos;s Settings ›
+        General. To remove Tidal: Settings › Apps › Installed apps › Tidal › Uninstall.
       </>
     ),
   },
@@ -305,17 +305,6 @@ export default function Home() {
                   {requirements.map((item) => (
                     <li key={item}>
                       <span className="list-mark">✓</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="list-block">
-                <h3 className="list-title">Coming next</h3>
-                <ul className="list">
-                  {comingNext.map((item) => (
-                    <li key={item}>
-                      <span className="list-mark">[ ]</span>
                       {item}
                     </li>
                   ))}
