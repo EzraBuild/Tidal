@@ -21,7 +21,7 @@ warn on first run: choose **More info → Run anyway**.
 | 4 | Adaptive brightness: sunrise/sunset schedule, sync from built-in screen / light sensor | Done |
 | 5 | Input source (VCP 0x60) and volume (VCP 0x62) | Done |
 | 6 | Software dimming below 0% / for monitors without DDC/CI | Done |
-| 7 | Per-app presets | Planned |
+| 7 | Per-app presets | Done |
 | 8 | JSON settings, start with Windows | Planned |
 
 ## Layout
@@ -39,12 +39,12 @@ src/Tidal.App          WPF tray app (WPF-UI controls, restyled: monochrome, squa
   Osd/                 On-screen brightness indicator for shortcuts
   Themes/              Tidal's palette (light/dark) and control styles: pill slider, chips, tabs, tiles
   Controls/            Shortcut recorder, number dial, day curve chart, mode picker
-  Services/            Global hotkeys, settings persistence, software dimming overlays
+  Services/            Global hotkeys, settings persistence, software dimming overlays, app presets
   ViewModels/          Display list shared by the popup and Settings ("link all" lives here), shortcuts
   Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
 tools/Tidal.Diag       Console diagnostics: what each display supports
 tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, interop structs, limits and
-                       dimming below 0, shortcuts, settings store, sun times, adaptive curves
+                       dimming below 0, app presets, shortcuts, settings store, sun times, adaptive curves
 ```
 
 ### How detection works
@@ -116,8 +116,13 @@ drag it onto the taskbar to keep it visible).
   Each display has its own Adaptive switch (on for external displays by default) and follows the
   level within its limits, so limits double as calibration. Changing a display yourself while
   adaptive is on keeps your change as an offset; Settings shows it with a Reset button.
+- **App presets** (the Apps tab in Settings): give an app its own brightness, as a percentage of
+  each display's range. While the app is in front, the display showing it switches to that
+  brightness (every display with Link all on) and goes back when you switch away; adaptive
+  brightness waits meanwhile. Add apps from the ones that are open, or browse for a program.
+  Tidal's own windows, the taskbar and the Start menu don't count as switching away.
 - **Right-click the icon** for Settings (contrast, limits, adaptive brightness, dimming below 0,
-  shortcuts, why a display can't be controlled), detecting displays again, and Quit.
+  app presets, shortcuts, why a display can't be controlled), detecting displays again, and Quit.
 - Hovering the icon shows each display's brightness.
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
