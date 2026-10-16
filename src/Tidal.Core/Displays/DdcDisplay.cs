@@ -1,10 +1,4 @@
-using System.Runtime.InteropServices;
-using System.Text;
-using Tidal.Core;
-using Tidal.Core.Displays;
-using Tidal.Windows.Native;
-
-namespace Tidal.Windows.Displays;
+namespace Tidal.Core.Displays;
 
 /// <summary>An external monitor controlled over DDC/CI.</summary>
 public sealed class DdcDisplay : Display
@@ -15,22 +9,27 @@ public sealed class DdcDisplay : Display
     private const int ReadAttempts = 3;
     private const int WriteAttempts = 2;
 
-    private readonly SafePhysicalMonitorHandle _handle;
+    private readonly IDdcChannel _channel;
+    private readonly string _noReplyNote;
     private readonly DeviceCommandQueue _queue;
     private uint _brightnessMax;
     private uint _contrastMax;
     private uint _volumeMax;
     private MonitorCapabilities? _capabilities;
 
-    internal DdcDisplay(DisplayInfo info, SafePhysicalMonitorHandle handle) : base(info)
+    /// <param name="info">The display.</param>
+    /// <param name="channel">How to reach the monitor. The display owns it from now on.</param>
+    /// <param name="noReplyNote">What to tell the user when the monitor doesn't answer.</param>
+    public DdcDisplay(DisplayInfo info, IDdcChannel channel, string noReplyNote) : base(info)
     {
-        _handle = handle;
+        _channel = channel;
+        _noReplyNote = noReplyNote;
         _queue = new DeviceCommandQueue(info.Name, CommandGap);
     }
 
     public override ControlMethod Method => SupportsBrightness || SupportsContrast ? ControlMethod.DdcCi : ControlMethod.None;
 
-    protected override async Task InitializeAsync(CancellationToken cancellationToken)
+    protected internal override async Task InitializeAsync(CancellationToken cancellationToken)
     {
         var brightness = await ReadVcpAsync(VcpCode.Brightness).WaitAsync(cancellationToken);
         // If brightness didn't answer, DDC/CI is off or blocked; skip further slow, failing reads.
@@ -40,7 +39,7 @@ public sealed class DdcDisplay : Display
         SupportsContrast = contrast is { Maximum: > 0 };
         if (SupportsBrightness) _brightnessMax = brightness!.Value.Maximum;
         if (SupportsContrast) _contrastMax = contrast!.Value.Maximum;
-        Note = SupportsBrightness ? null : DescribeNoDdc(Info);
+        Note = SupportsBrightness ? null : _noReplyNote;
 
         Log.Info($"{Name}: DDC/CI brightness={Format(brightness)} contrast={Format(contrast)}");
         OnValuesRead(ToPercent(brightness), ToPercent(contrast));
@@ -120,10 +119,14 @@ public sealed class DdcDisplay : Display
     {
         for (int attempt = 1; attempt <= ReadAttempts; attempt++)
         {
-            if (Dxva2.GetVCPFeatureAndVCPFeatureReply(_handle, code, out _, out uint current, out uint maximum))
-                return new VcpReply(current, maximum);
-
-            Log.Debug($"{Name}: read VCP 0x{code:X2} failed (attempt {attempt}, error 0x{Marshal.GetLastPInvokeError():X8})");
+            try
+            {
+                return _channel.GetVcp(code);
+            }
+            catch (IOException ex)
+            {
+                Log.Debug($"{Name}: read VCP 0x{code:X2} failed (attempt {attempt}): {ex.Message}");
+            }
             if (attempt < ReadAttempts) Thread.Sleep(CommandGap);
         }
         return null;
@@ -133,9 +136,15 @@ public sealed class DdcDisplay : Display
     {
         for (int attempt = 1; attempt <= WriteAttempts; attempt++)
         {
-            if (Dxva2.SetVCPFeature(_handle, code, value)) return;
-
-            Log.Debug($"{Name}: write VCP 0x{code:X2}={value} failed (attempt {attempt}, error 0x{Marshal.GetLastPInvokeError():X8})");
+            try
+            {
+                _channel.SetVcp(code, value);
+                return;
+            }
+            catch (IOException ex)
+            {
+                Log.Debug($"{Name}: write VCP 0x{code:X2}={value} failed (attempt {attempt}): {ex.Message}");
+            }
             if (attempt < WriteAttempts) Thread.Sleep(CommandGap);
         }
         Log.Warning($"{Name}: gave up writing VCP 0x{code:X2}={value}");
@@ -145,13 +154,14 @@ public sealed class DdcDisplay : Display
     {
         for (int attempt = 1; attempt <= ReadAttempts; attempt++)
         {
-            if (Dxva2.GetCapabilitiesStringLength(_handle, out uint length) && length > 0)
+            try
             {
-                var buffer = new byte[length];
-                if (Dxva2.CapabilitiesRequestAndCapabilitiesReply(_handle, buffer, length))
-                    return Encoding.ASCII.GetString(buffer).TrimEnd('\0');
+                return _channel.GetCapabilities();
             }
-            Log.Debug($"{Name}: capabilities request failed (attempt {attempt}, error 0x{Marshal.GetLastPInvokeError():X8})");
+            catch (IOException ex)
+            {
+                Log.Debug($"{Name}: capabilities request failed (attempt {attempt}): {ex.Message}");
+            }
             if (attempt < ReadAttempts) Thread.Sleep(CommandGap);
         }
         return null;
@@ -165,23 +175,12 @@ public sealed class DdcDisplay : Display
 
     private static string Format(VcpReply? reply) => reply is { } r ? $"{r.Current}/{r.Maximum}" : "no reply";
 
-    private static string DescribeNoDdc(DisplayInfo info) => info.Connection switch
-    {
-        "Wireless" or "Virtual" or "USB display" =>
-            $"{info.Connection} connections don't carry DDC/CI, so Tidal can't change this display's hardware settings.",
-        _ when info.IsInternal =>
-            "Windows doesn't expose brightness control for this built-in screen.",
-        _ =>
-            "This monitor didn't respond to DDC/CI. Turn on DDC/CI in the monitor's on-screen menu, " +
-            "or connect it directly instead of through a dock, KVM switch or adapter.",
-    };
-
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
-            _queue.Dispose(); // flushes pending writes before the handle goes away
-            _handle.Dispose();
+            _queue.Dispose(); // flushes pending writes before the channel closes
+            _channel.Dispose();
         }
     }
 }

@@ -39,15 +39,15 @@ warn on first run: choose **More info → Run anyway**.
 
 ```
 src/Tidal.Core         What Tidal does on any operating system: plain .NET, no UI, no OS calls
-  Displays/            Display model, the detector interface, write throttling, limits, software
-                       dimming levels, DDC/CI capabilities parsing
+  Displays/            Display model, the detector interface, DDC/CI displays (each OS supplies the
+                       channel), write throttling, limits, software dimming levels, capabilities parsing
   Adaptive/            Sun position (NOAA equations), level curves, the sun source, and the base
                        classes for the built-in screen and light sensor sources
   Hotkeys/             Shortcut parsing and formatting
   Settings/            Settings model and JSON store
 src/Tidal.Windows      Windows hardware
   Native/              P/Invoke: user32 (monitor enumeration, CCD) and dxva2 (DDC/CI)
-  Displays/            Detection, DDC/CI and WMI backends
+  Displays/            Detection, the DDC/CI channel (dxva2) and WMI brightness
   Adaptive/            Built-in screen (WMI) and light sensor (WinRT) sources
   Startup/             The command Windows runs at sign-in
 src/Tidal.ViewModels   What the popup and Settings show and do, for any UI framework: the display
@@ -63,8 +63,8 @@ src/Tidal.App          WPF tray app for Windows (WPF-UI controls, restyled: mono
   Services/            The Windows side of Platform/, plus software dimming overlays and app presets
   Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
 tools/Tidal.Diag       Console diagnostics: what each display supports
-tests/Tidal.Core.Tests Unit tests: throttling queue, capabilities parser, limits and dimming below 0,
-                       app presets, shortcuts, settings store, sun times, adaptive curves
+tests/Tidal.Core.Tests Unit tests: throttling queue, DDC/CI displays, capabilities parser, limits and
+                       dimming below 0, app presets, shortcuts, settings store, sun times, adaptive curves
 tests/Tidal.ViewModels.Tests  Link all, software dimming, app presets, start at sign-in, UI timer
 tests/Tidal.Windows.Tests     Interop struct sizes, startup command
 ```

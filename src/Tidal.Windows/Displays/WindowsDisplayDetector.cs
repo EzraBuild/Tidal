@@ -65,10 +65,21 @@ public sealed class WindowsDisplayDetector : IDisplayDetector
             return new WmiDisplay(candidate.Info, candidate.WmiInstance);
         }
         if (candidate.Physical is not null)
-            return new DdcDisplay(candidate.Info, candidate.Physical.Handle);
+            return new DdcDisplay(candidate.Info, new Dxva2Channel(candidate.Physical.Handle), DescribeNoDdc(candidate.Info));
 
         return new UncontrolledDisplay(candidate.Info, "Windows didn't provide a hardware control channel for this display.");
     }
+
+    private static string DescribeNoDdc(DisplayInfo info) => info.Connection switch
+    {
+        "Wireless" or "Virtual" or "USB display" =>
+            $"{info.Connection} connections don't carry DDC/CI, so Tidal can't change this display's hardware settings.",
+        _ when info.IsInternal =>
+            "Windows doesn't expose brightness control for this built-in screen.",
+        _ =>
+            "This monitor didn't respond to DDC/CI. Turn on DDC/CI in the monitor's on-screen menu, " +
+            "or connect it directly instead of through a dock, KVM switch or adapter.",
+    };
 
     private static void AssignWmiInstances(List<Candidate> candidates, List<string> wmiInstances)
     {
