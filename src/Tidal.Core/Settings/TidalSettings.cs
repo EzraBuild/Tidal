@@ -11,6 +11,9 @@ public sealed class TidalSettings
     /// <summary>Move every display's brightness together.</summary>
     public bool LinkAll { get; set; }
 
+    /// <summary>Check for new versions now and then, and download them in the background.</summary>
+    public bool AutoUpdate { get; set; } = true;
+
     public HotkeySettings Hotkeys { get; set; } = new();
 
     public AdaptiveSettings Adaptive { get; set; } = new();

@@ -13,6 +13,7 @@ public sealed class SettingsStoreTests : IDisposable
         var settings = new SettingsStore(FilePath).Load();
 
         Assert.False(settings.LinkAll);
+        Assert.True(settings.AutoUpdate);
         Assert.Equal("Ctrl+Alt+PageUp", settings.Hotkeys.BrightnessUp);
         Assert.Equal(5, settings.Hotkeys.Step);
         Assert.Empty(settings.Displays);
