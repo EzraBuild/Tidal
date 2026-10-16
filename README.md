@@ -132,6 +132,10 @@ drag it onto the taskbar to keep it visible).
   Run key, so it starts in the tray when you sign in, without the popup. It's on after a fresh
   install and removed again on uninstall. If it's turned off in Windows' Startup apps (Settings or
   Task Manager), the General tab says so. The tab also shows the version and the settings file.
+- **Updates**: an installed Tidal checks its GitHub releases a minute after starting and every six
+  hours, downloads a new version in the background, and shows "Update ready" in the popup.
+  Restart from there (or Settings › General) to install it now; otherwise it installs when Tidal
+  quits. Settings › General has Check now and a switch to turn automatic checks off.
 - Launching Tidal again opens the running instance's popup. `--background` starts it without
   showing the popup.
 
@@ -162,7 +166,11 @@ dotnet run --project tools/Tidal.Diag -- --set-input 1 11     # switch display 1
    `artifacts\releases` (`Tidal-win-Setup.exe`, `Tidal-win-Portable.zip`, and update feed files).
 3. Create a GitHub release tagged `vX.Y.Z` and upload **every** file from `artifacts\releases`.
    The website's buttons link to `releases/latest/download/Tidal-win-Setup.exe`, so they pick up
-   the new version automatically.
+   the new version automatically, and installed copies update from the release's
+   `releases.win.json` and `.nupkg`. Don't mark it as a pre-release: neither would see it.
+
+To try an update before publishing it, start an installed Tidal with `TIDAL_UPDATE_URL` set to a
+folder of release files (from `build\release.ps1` or `vpk pack`); it updates from there instead.
 
 The website is a Next.js app in `website/` (`npm install`, `npm run dev`), deployed to Vercel
 (`npx vercel deploy --prod` from that folder). `build\make-icon.ps1` regenerates the app and website icons.
