@@ -125,7 +125,22 @@ const faq = [
   },
   {
     q: "Does it collect any data?",
-    a: <>No. There&apos;s no account, no analytics and no telemetry. Settings are saved in a file on your PC.</>,
+    a: (
+      <>
+        No. There&apos;s no account, no analytics and no telemetry. Settings are saved in a file on your PC. The only thing Tidal
+        asks the internet is whether GitHub has a newer version, which you can turn off in Settings › General.
+      </>
+    ),
+  },
+  {
+    q: "How do I get new versions?",
+    a: (
+      <>
+        From version 0.1.5, Tidal updates itself: it checks for a new version every few hours, downloads it in the background
+        and installs it when you click <strong>Restart</strong> in its popup, or the next time it quits. Older versions: download
+        the installer again and run it.
+      </>
+    ),
   },
   {
     q: "How do I open it, and how do I uninstall it?",
