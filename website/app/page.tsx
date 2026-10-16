@@ -2,15 +2,18 @@ import Image from "next/image";
 import { LogoMark, Wordmark } from "@/components/logo";
 import { ScreenTabs } from "@/components/screen-tabs";
 import {
+  AppsIcon,
   ArrowIcon,
   DownloadIcon,
   GitHubIcon,
   LinkIcon,
   LockIcon,
+  MoonIcon,
   PlugIcon,
+  RangeIcon,
   SunIcon,
   SunsetIcon,
-  MoonIcon,
+  TrayIcon,
   WarningIcon,
 } from "@/components/icons";
 
@@ -33,10 +36,28 @@ const features = [
     text: "Dim at night and brightest at midday, worked out offline from your location. Or let external screens match the laptop, or a light sensor.",
   },
   {
+    tag: "Dimming",
+    icon: MoonIcon,
+    title: "Darker than 0%",
+    text: "Turn on Dim below 0 and keep going past a monitor's lowest brightness, in software. Monitors without DDC/CI get a slider that dims them the same way.",
+  },
+  {
+    tag: "Apps",
+    icon: AppsIcon,
+    title: "A brightness for each app",
+    text: "Give your video player, a game or anything else its own brightness. The screen showing it switches while it's in front, and goes back when you switch away.",
+  },
+  {
     tag: "Link all",
     icon: LinkIcon,
     title: "Every screen in step",
-    text: "Move every display together, each within its own lowest and highest brightness, so a bright monitor and a dim laptop stay matched.",
+    text: "Move every display together, each within its own range, so a bright monitor and a dim laptop stay matched.",
+  },
+  {
+    tag: "Limits",
+    icon: RangeIcon,
+    title: "Your range, per display",
+    text: "Set a lowest and highest brightness for each display. Sliders, shortcuts, presets and adaptive brightness all stay inside it.",
   },
   {
     tag: "Inputs",
@@ -45,10 +66,10 @@ const features = [
     text: "Switch a monitor between DisplayPort, HDMI and USB-C, and set its speaker volume, when the monitor supports it.",
   },
   {
-    tag: "Dimming",
-    icon: MoonIcon,
-    title: "Darker than 0%",
-    text: "Turn on Dim below 0 and keep going past a monitor's lowest brightness, in software. Monitors without DDC/CI get a slider that dims them the same way.",
+    tag: "Tray",
+    icon: TrayIcon,
+    title: "Lives in the tray",
+    text: "One click away, in light and dark mode, with a small level on screen when you use the keys. It tells you plainly when a display can't be controlled.",
   },
   {
     tag: "Private",
@@ -71,7 +92,7 @@ const requirements = [
   "External monitors need DDC/CI, which most have (usually on in the monitor's menu)",
 ];
 
-const comingNext = ["Per-app brightness presets", "Start with Windows"];
+const comingNext = ["Start with Windows"];
 
 const faq = [
   {

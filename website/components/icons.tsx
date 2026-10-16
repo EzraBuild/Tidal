@@ -51,6 +51,27 @@ export const PlugIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const TrayIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 15h5l1.5 2.5h5L16 15h5M3 15V5h18v10M3 15v4h18v-4" />
+  </Icon>
+);
+
+export const AppsIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="4" width="6.5" height="6.5" />
+    <rect x="13.5" y="4" width="6.5" height="6.5" />
+    <rect x="4" y="13.5" width="6.5" height="6.5" />
+    <path d="M16.75 13.5v6.5M13.5 16.75H20" />
+  </Icon>
+);
+
+export const RangeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 12h18M7 8v8M17 8v8" />
+  </Icon>
+);
+
 export const MoonIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
