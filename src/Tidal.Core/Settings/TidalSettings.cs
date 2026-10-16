@@ -18,6 +18,12 @@ public sealed class TidalSettings
     /// <summary>Per-display settings, keyed by <see cref="Display.Id"/>.</summary>
     public Dictionary<string, DisplaySettings> Displays { get; set; } = [];
 
+    /// <summary>Brightness to use while particular apps are in front.</summary>
+    public List<AppPreset> AppPresets { get; set; } = [];
+
+    /// <summary>The preset for the program at <paramref name="programPath"/> (a path or a file name), if there is one.</summary>
+    public AppPreset? FindAppPreset(string programPath) => AppPresets.FirstOrDefault(p => p.Matches(programPath));
+
     /// <summary>The settings for a display, created with defaults the first time it is seen.</summary>
     public DisplaySettings GetDisplay(string id)
     {
@@ -49,6 +55,51 @@ public sealed class TidalSettings
             display.BelowZeroLevel = Math.Clamp(display.BelowZeroLevel, 0, BrightnessRange.BelowZeroDepth);
             if (display.SoftwareBrightness is int software) display.SoftwareBrightness = Math.Clamp(software, 0, 100);
         }
+
+        // One preset per program, each naming a program file.
+        AppPresets = (AppPresets ?? [])
+            .Where(p => p is not null && !string.IsNullOrWhiteSpace(p.App))
+            .Select(p =>
+            {
+                p.App = AppPreset.ProgramName(p.App);
+                p.Brightness = Math.Clamp(p.Brightness, 0, 100);
+                return p;
+            })
+            .DistinctBy(p => p.App, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+}
+
+/// <summary>A brightness to use while a particular app is in front.</summary>
+public sealed class AppPreset
+{
+    /// <summary>The app's program file name, e.g. <c>vlc.exe</c>. Apps are matched by this alone.</summary>
+    public string App { get; set; } = "";
+
+    /// <summary>What to call the app in Settings, e.g. "VLC media player".</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Where the program was found, for its icon. Optional.</summary>
+    public string? Path { get; set; }
+
+    /// <summary>
+    /// Brightness while the app is in front, in percent of each display's range: 0 is a display's
+    /// lowest, 100 its highest (the same scale as the popup's presets).
+    /// </summary>
+    public int Brightness { get; set; } = 100;
+
+    [JsonIgnore]
+    public string DisplayName => string.IsNullOrWhiteSpace(Name) ? System.IO.Path.GetFileNameWithoutExtension(App) : Name;
+
+    /// <summary>True when <paramref name="programPath"/> (a path or a file name) is this preset's app.</summary>
+    public bool Matches(string programPath)
+        => programPath.Length > 0 && string.Equals(ProgramName(programPath), ProgramName(App), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The program file name for a path or name: <c>C:\Apps\VLC\vlc.exe</c> and <c>vlc</c> both give <c>vlc.exe</c>.</summary>
+    public static string ProgramName(string programPath)
+    {
+        string name = System.IO.Path.GetFileName(programPath.Trim());
+        return System.IO.Path.HasExtension(name) ? name : name + ".exe";
     }
 }
 

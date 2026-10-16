@@ -66,6 +66,12 @@ public sealed class SettingsStoreTests : IDisposable
                 "a": { "MinBrightness": 90, "MaxBrightness": 10, "BelowZeroLevel": 400, "SoftwareBrightness": -3, "AdaptiveOffset": -9 },
                 "b": null,
               },
+              "AppPresets": [
+                { "App": "C:\\Apps\\vlc.exe", "Brightness": 140 },
+                { "App": "VLC" },
+                { "App": "" },
+                null,
+              ],
             }
             """);
 
@@ -78,6 +84,8 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(0, a.SoftwareBrightness);
         Assert.Equal(-2, a.AdaptiveOffset);
         Assert.False(settings.Displays.ContainsKey("b"));
+        var preset = Assert.Single(settings.AppPresets); // blanks, nulls and duplicates dropped
+        Assert.Equal(("vlc.exe", 100), (preset.App, preset.Brightness));
     }
 
     [Fact]
