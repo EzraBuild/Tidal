@@ -101,7 +101,9 @@ public sealed class AppPreset
     /// <summary>The program file name for a path or name: <c>C:\Apps\VLC\vlc.exe</c> and <c>vlc</c> both give <c>vlc.exe</c>.</summary>
     public static string ProgramName(string programPath)
     {
-        string name = System.IO.Path.GetFileName(programPath.Trim());
+        // Either separator, whatever the OS: the paths come from Windows.
+        string path = programPath.Trim();
+        string name = path[(path.LastIndexOfAny(['/', '\\']) + 1)..];
         return System.IO.Path.HasExtension(name) ? name : name + ".exe";
     }
 }
