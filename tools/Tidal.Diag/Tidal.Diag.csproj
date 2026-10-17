@@ -1,12 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Built on Windows it uses the Windows hardware code; built anywhere else, Linux's. -->
+
   <PropertyGroup>
-    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
+    <IsWindows>$([MSBuild]::IsOSPlatform('Windows'))</IsWindows>
   </PropertyGroup>
 
-  <ItemGroup>
+  <PropertyGroup Condition="'$(IsWindows)' == 'true'">
+    <TargetFramework>$(WindowsTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsWindows)' == 'true'">
     <ProjectReference Include="..\..\src\Tidal.Windows\Tidal.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsWindows)' != 'true'">
+    <ProjectReference Include="..\..\src\Tidal.Linux\Tidal.Linux.csproj" />
   </ItemGroup>
 
 </Project>

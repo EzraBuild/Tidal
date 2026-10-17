@@ -1,0 +1,14 @@
+{
+  "solution": {
+    "path": "Tidal.sln",
+    "projects": [
+      "src\\Tidal.Core\\Tidal.Core.csproj",
+      "src\\Tidal.ViewModels\\Tidal.ViewModels.csproj",
+      "src\\Tidal.Linux\\Tidal.Linux.csproj",
+      "tools\\Tidal.Diag\\Tidal.Diag.csproj",
+      "tests\\Tidal.Core.Tests\\Tidal.Core.Tests.csproj",
+      "tests\\Tidal.ViewModels.Tests\\Tidal.ViewModels.Tests.csproj",
+      "tests\\Tidal.Linux.Tests\\Tidal.Linux.Tests.csproj"
+    ]
+  }
+}

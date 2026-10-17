@@ -50,6 +50,10 @@ src/Tidal.Windows      Windows hardware
   Displays/            Detection, the DDC/CI channel (dxva2) and WMI brightness
   Adaptive/            Built-in screen (WMI) and light sensor (WinRT) sources
   Startup/             The command Windows runs at sign-in
+src/Tidal.Linux        Linux hardware (no Linux app yet)
+  Native/              libc calls for i2c-dev
+  Displays/            Detection (DRM outputs, EDID), DDC/CI over I2C, backlights through sysfs or logind
+  Adaptive/            The built-in screen's backlight as a source
 src/Tidal.ViewModels   What the popup and Settings show and do, for any UI framework: the display
                        list ("link all" lives here), adaptive brightness, app presets, shortcuts,
                        updates, settings persistence
@@ -62,11 +66,12 @@ src/Tidal.App          WPF tray app for Windows (WPF-UI controls, restyled: mono
   Controls/            Shortcut recorder, number dial, day curve chart, mode picker
   Services/            The Windows side of Platform/, plus software dimming overlays and app presets
   Interop/             Win32 for the tray icon, popup placement, hotkeys and the dimming overlay
-tools/Tidal.Diag       Console diagnostics: what each display supports
+tools/Tidal.Diag       Console diagnostics: what each display supports (Windows or Linux)
 tests/Tidal.Core.Tests Unit tests: throttling queue, DDC/CI displays, capabilities parser, limits and
                        dimming below 0, app presets, shortcuts, settings store, sun times, adaptive curves
 tests/Tidal.ViewModels.Tests  Link all, software dimming, app presets, start at sign-in, UI timer
 tests/Tidal.Windows.Tests     Interop struct sizes, startup command
+tests/Tidal.Linux.Tests       Detection on made-up machines, DDC/CI framing, EDID, backlights, libc calls
 ```
 
 ### How detection works
@@ -79,6 +84,17 @@ On Windows, `WindowsDisplayDetector` joins three views of the same hardware:
   the display's settings ID) and the connection type, which tells built-in panels apart.
 - **WMI** (`root\WMI` `WmiMonitorBrightness`) provides brightness for built-in panels, matched to a
   display by PnP instance path.
+
+On Linux, `LinuxDisplayDetector` reads the kernel's graphics outputs in `/sys/class/drm`:
+
+- Each connected, enabled output's **EDID** gives the monitor's name and identity.
+- The **I2C bus** the driver links to the output (its `ddc` link, or the DisplayPort AUX channel
+  under it) carries DDC/CI, which Tidal speaks itself through `/dev/i2c-N`. For drivers that don't
+  link buses (NVIDIA's), Tidal reads the EDID on each graphics card bus and matches it.
+- **Built-in screens** use `/sys/class/backlight`: written directly where the user may, otherwise
+  through systemd-logind, which lets the signed-in user set it without root.
+
+The kernel doesn't know how the desktop arranges displays, so on Linux the bounds are placeholders.
 
 Each display becomes a `DdcDisplay`, `WmiDisplay` or `UncontrolledDisplay`. Displays without
 hardware control expose a `Note` explaining why (DDC/CI off in the monitor menu, dock or adapter in
@@ -176,6 +192,16 @@ dotnet run --project tools/Tidal.Diag -- --set 2 70     # set display 2 to 70%
 dotnet run --project tools/Tidal.Diag -- --watch-builtin 30   # print built-in brightness changes
 dotnet run --project tools/Tidal.Diag -- --set-input 1 11     # switch display 1 to HDMI 1 (careful!)
 ```
+
+On Linux there's no app yet, but the hardware code, its tests and Diag run with the .NET 8 SDK:
+
+```sh
+dotnet test Tidal.Linux.slnf
+dotnet run --project tools/Tidal.Diag
+```
+
+DDC/CI there needs the `i2c-dev` module (`sudo modprobe i2c-dev`) and access to `/dev/i2c-*`: join
+the `i2c` group, or install ddcutil, whose udev rules grant it.
 
 ## Releasing
 
