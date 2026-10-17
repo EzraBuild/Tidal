@@ -3,6 +3,11 @@ namespace Tidal.Core.Displays;
 /// <summary>An external monitor controlled over DDC/CI.</summary>
 public sealed class DdcDisplay : Display
 {
+    /// <summary>The usual note for a monitor that doesn't answer.</summary>
+    public const string NoReplyNote =
+        "This monitor didn't respond to DDC/CI. Turn on DDC/CI in the monitor's on-screen menu, " +
+        "or connect it directly instead of through a dock, KVM switch or adapter.";
+
     // The DDC/CI spec asks hosts to leave ~50 ms between commands; many monitors really need it.
     private static readonly TimeSpan CommandGap = TimeSpan.FromMilliseconds(50);
     // DDC/CI runs over I2C with no error correction, so occasional failed reads are normal.

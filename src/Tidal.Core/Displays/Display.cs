@@ -9,6 +9,8 @@ public enum ControlMethod
     DdcCi,
     /// <summary>The WMI brightness interface (built-in laptop screens on Windows).</summary>
     Wmi,
+    /// <summary>The kernel's backlight interface, /sys/class/backlight (built-in laptop screens on Linux).</summary>
+    Backlight,
 }
 
 public readonly record struct ScreenRect(int Left, int Top, int Right, int Bottom)

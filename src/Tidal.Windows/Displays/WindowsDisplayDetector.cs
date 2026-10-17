@@ -76,9 +76,7 @@ public sealed class WindowsDisplayDetector : IDisplayDetector
             $"{info.Connection} connections don't carry DDC/CI, so Tidal can't change this display's hardware settings.",
         _ when info.IsInternal =>
             "Windows doesn't expose brightness control for this built-in screen.",
-        _ =>
-            "This monitor didn't respond to DDC/CI. Turn on DDC/CI in the monitor's on-screen menu, " +
-            "or connect it directly instead of through a dock, KVM switch or adapter.",
+        _ => DdcDisplay.NoReplyNote,
     };
 
     private static void AssignWmiInstances(List<Candidate> candidates, List<string> wmiInstances)

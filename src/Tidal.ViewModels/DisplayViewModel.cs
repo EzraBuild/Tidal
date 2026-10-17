@@ -50,6 +50,7 @@ public sealed partial class DisplayViewModel : ObservableObject
     {
         ControlMethod.DdcCi => "DDC/CI",
         ControlMethod.Wmi => "Windows brightness",
+        ControlMethod.Backlight => "Backlight",
         _ => "Software dimming",
     };
 

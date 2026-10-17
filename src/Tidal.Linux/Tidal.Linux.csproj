@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Linux hardware: displays (DRM outputs and their EDID in sysfs, DDC/CI over i2c-dev, backlights
+       through sysfs or systemd-logind) and the built-in screen as an adaptive source. -->
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tidal.Core\Tidal.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tidal.Linux.Tests" />
+  </ItemGroup>
+
+</Project>
