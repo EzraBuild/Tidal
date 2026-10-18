@@ -10,7 +10,7 @@ const description =
   "Tidal is a free Windows tray app that changes the real brightness of your external monitors: sliders, keyboard shortcuts, and brightness that follows the sun.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tidal-lemon.vercel.app"),
+  metadataBase: new URL("https://tidal.justsee.me"),
   title: "Tidal — brightness control for every monitor on Windows",
   description,
   openGraph: {

@@ -6,7 +6,7 @@
 
 <p align="center">
   Brightness control for every monitor on Windows.<br>
-  <a href="https://tidal-lemon.vercel.app">Website</a> ·
+  <a href="https://tidal.justsee.me">Website</a> ·
   <a href="https://github.com/EzraBuild/Tidal/releases/latest/download/Tidal-win-Setup.exe">Download for Windows</a> ·
   <a href="https://github.com/EzraBuild/Tidal/releases">Releases</a>
 </p>
@@ -17,7 +17,7 @@ hotkeys, and input switching. Inspired by Lunar for macOS; written from scratch.
 
 ## Download
 
-**[tidal-lemon.vercel.app](https://tidal-lemon.vercel.app)**, or grab `Tidal-win-Setup.exe` from the
+**[tidal.justsee.me](https://tidal.justsee.me)**, or grab `Tidal-win-Setup.exe` from the
 [latest release](https://github.com/EzraBuild/Tidal/releases/latest). It installs per user (no admin
 rights) on 64-bit Windows 10 (2004+) and 11. The preview isn't code-signed yet, so SmartScreen may
 warn on first run: choose **More info → Run anyway**.
